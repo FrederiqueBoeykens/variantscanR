@@ -24,7 +24,7 @@ vcfscanner <- function(x, sample){
   gt <- as.data.frame(gt, stringsAsFactors = FALSE)
   fix <- cbind(fix, gt[,1])
   names(fix)[9] <- "FORMAT"
-  gt <- gt %>% dplyr::select(all_of(sample))
+  gt <- gt %>% select(all_of(sample))
   vcf <- cbind.data.frame(fix,gt)
   vcf_names <- c("chrom", "pos", "id", "ref", "alt", "qual", "filter", "info", "format", "sample")
   names(vcf) <- vcf_names
