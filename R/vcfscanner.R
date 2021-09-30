@@ -1,4 +1,4 @@
-#' @title vcfscanner
+#' @title vcfscanneR
 #' @description Uploads a single sample VCF file (from a multi sample VCF file) into R.
 #'
 #' @param x Character string containing the name of the vcf file or file path.
@@ -7,16 +7,13 @@
 #' @return Returns a single sample vcf file ready for downstream analysis.
 #' @export
 #' @importFrom vcfR read.vcfR
-#' @import dplyr
+#' @importFrom dplyr "%>%"
 #'
 #'@examples
 #'\donttest{}
-#'#example
-#'\donttest{}
-#'
 
 
-vcfscanner <- function(x, sample){
+vcfscanneR <- function(x, sample){
   vcf <- vcfR::read.vcfR(x)
   fix <- vcf@fix
   fix <- as.data.frame(fix, stringsAsFactors = FALSE)
@@ -24,7 +21,7 @@ vcfscanner <- function(x, sample){
   gt <- as.data.frame(gt, stringsAsFactors = FALSE)
   fix <- cbind(fix, gt[,1])
   names(fix)[9] <- "FORMAT"
-  gt <- gt %>% select(all_of(sample))
+  gt <- gt %>% dplyr::select(dplyr::all_of(sample))
   vcf <- cbind.data.frame(fix,gt)
   vcf_names <- c("chrom", "pos", "id", "ref", "alt", "qual", "filter", "info", "format", "sample")
   names(vcf) <- vcf_names

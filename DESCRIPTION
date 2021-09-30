@@ -16,4 +16,5 @@ LazyData: true
 RoxygenNote: 7.1.2
 Imports: 
     vcfR,
-    dplyr
+    dplyr,
+    stats
