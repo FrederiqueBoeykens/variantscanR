@@ -15,7 +15,7 @@ annotateR_NCBI(a, b)
 Returns an annotated BED file containing both gene names.
 }
 \description{
-Changes the gene names of BED file.
+Changes the gene names of an NCBI BED file.
 }
 \examples{
 \dontrun{}

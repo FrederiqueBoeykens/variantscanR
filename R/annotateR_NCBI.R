@@ -1,5 +1,5 @@
 #' @title annotateR_NCBI
-#' @description Changes the gene names of BED file.
+#' @description Changes the gene names of an NCBI BED file.
 #'
 #' @param a NCBI BED file containing 'XR/XM' nomenclature for genes.
 #' @param b NCBI 'all fields' file containing the alternate gene names.

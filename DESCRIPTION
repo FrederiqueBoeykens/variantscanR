@@ -17,4 +17,10 @@ RoxygenNote: 7.1.2
 Imports: 
     vcfR,
     dplyr,
-    stats
+    stats,
+    rebus,
+    stringr,
+    Biostrings,
+    ggplot2,
+    ggrepel,
+    R3port
