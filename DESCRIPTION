@@ -24,3 +24,7 @@ Imports:
     ggplot2,
     ggrepel,
     R3port
+Suggests: 
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr
