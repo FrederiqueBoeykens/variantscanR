@@ -1,28 +1,15 @@
 ---
-title: "variantscanR_vignette"
+title: "variantscanR vignette"
 author: "Fréderique Boeykens"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{variantscanR_vignette}
+  %\VignetteIndexEntry{variantscanR vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
 
-```{r setup}
-library(variantscanR)
-```
-
-## Workflow!
-
-![tryout.png](http://www.github.com/FrederiqueBoeykens/images/blob/main/tryout.png)
 
 
 
