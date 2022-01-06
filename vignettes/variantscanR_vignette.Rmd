@@ -8,6 +8,80 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+# Introduction
+
+One of the main goals in the genetics field is the identification of genetic variation accountable for a
+certain phenotype. This goal has been facilitated for several years by the introduction of next-generation
+sequencing technologies. At present time, most of the tools available for the evaluation of whole-genome
+or exome sequencing (WGS and WES, respectively) data are solely applicable for human analysis. For this
+reason, we developed variantscanR, an R-package, for the easy and straightforward identification of known
+disease-causing variants from a large collection of variants present in dogs and other animals.
+
+The R-package variantscanR enables the filtering of variant call format (VCF file) files for the presence
+of known disease-causing variants. In addition to the main variant-filtering function, the package allows
+for the estimation of genetic diversity using both single and multisample VCF files. User-defined, file
+format-specific options are available for the quality control of certain parameters using online database
+screening. Finally, next to the filtering of known disease-causing variants, an additional step is
+optional to gather the remaining variants located within the genes of interest. 
+
+VariantscanR is an R package, designed for the use as a clinical tool for variant filtering of known
+disease-causing mutations in domestic animals. The package focuses on cats and dogs but can be used for
+every animal if the required data and information for this animal is present. 
+
+This vignette is divided into four parts:
+
+* Preprocessing
+* Variant filtering
+* Diversity
+* Extra
+
+A visual representation of the workflow is given below.
+To explain the workflow of this package, an example will be used and elaborated in this vignette.
+
+![variantscanR workflow](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/workflow.png)
+
+
+**Example: Labrador retriever**
+WES data were obtained from 16 different dogs for an independent project at the laboratory. 
+The data used in this vignette is for purely demonstrative purposes. 
+One sample, from here on referred to as sample_849, was chosen randomly out of the pool of 16 dogs and is
+a yellow, female Labrador retriever. 
+
+
+# Preprocessing
+For the filtering of variants, the pipeline needs a least 3 different input file. The first one being the
+file containing the variants of interest. Secondly, the VCF file to which the variants of interest need to
+be filtered is required and thirdly, a BED file for the annotation of found variants is needed throughout
+the worflow. These 3 files require a certain format, which is explained in the following sections.
+
+## VCFscanneR
+Because the VCF file format is not one of the standard formats that can be uploaded in the R environment, the vcfscannR function was created.
+This function uploads a multisample sample VCF file into the R environment and turns it into a single
+sample VCF, ready for downstream analysis. 
+The function has 2 parameters. The first parameter is the name of the VCF file that needs to be uploaded
+OR contains the path to the file. The second parameter is the name of the sample of interest. The sample
+name has to match with that of the VCF file. In our example, the name is "sample_849". 
+
+R CODE 
+
+
+## chromosomenameR
+
+
+## annotateR_NCBI.R
+## pRocess
+
+# Variant filtering
+## variantfiltR
+
+# Diversity
+## diveRsity
+
+# Extra
+
+
+
+
 
 
 

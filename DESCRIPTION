@@ -23,8 +23,11 @@ Imports:
     Biostrings,
     ggplot2,
     ggrepel,
-    R3port
+    R3port,
+    svMisc
 Suggests: 
     rmarkdown,
     knitr
 VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)
