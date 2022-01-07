@@ -37,11 +37,13 @@ This vignette is divided into four parts:
 
 A visual representation of the workflow is given below.
 To explain the workflow of this package, an example will be used and elaborated in this vignette.
+Disclaimer: Not the entire VCF dataset is used for as this is a very large file.
 
 ![variantscanR workflow](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/workflow.png)
 
 
 **Example: Labrador retriever**
+
 WES data were obtained from 16 different dogs for an independent project at the laboratory. 
 The data used in this vignette is for purely demonstrative purposes. 
 One sample, from here on referred to as sample_849, was chosen randomly out of the pool of 16 dogs and is
@@ -54,15 +56,115 @@ file containing the variants of interest. Secondly, the VCF file to which the va
 be filtered is required and thirdly, a BED file for the annotation of found variants is needed throughout
 the worflow. These 3 files require a certain format, which is explained in the following sections.
 
+## Input files
+### (1) VCF file
+VCF stands for 'Variant Call Format' and is a standardized text file format used for reporting SNPs, indel and structural variations. A VCF file is composed of 3 main parts: 
+
+* Meta-data, starting with '##'
+* A header that starts with '#CHROM'
+* Variant call records
+
+The first 9 columns of the header line and the variant call record line give information on the variants found.
+
+The VCF file already has a certain fixed format and don't need adjusting. In fact, **never edit** a VCF in a word processor by hand, because it **will** screw up the format! 
+
+### (2) Variants file
+The variants file contains the known disease-causing variants you are interested in. This file does need a certain format so it can be used in downstream analysis. 
+Following columns need to be specified:
+
+* __Chromosome__
+* __Start__
+* End
+* Reference
+* Reference sequence
+* Inheritance pattern
+* __Gene__
+* Variant Phenotype
+* Breed
+
+The columns in __bold__ are mandatory, the other ones are optional. The optional columns need to be included in the file, but don't need values, so _NA_ values are allowed. 
+
+BUT, however, the function also allows another 'specific' format that can be donwloaded straight from the internet, to make it a little more user-friendly. 
+The file can be downloaded from [here](https://www.omia.org/home/). More specifically, if you want to download the known-disease causing variants of the dog, a CSV document can be obtained from [here](https://www.omia.org/results/?gb_species_id=9615&search_type=advanced&result_type=variant) at the bottom __'Download table as CSV'__.
+When the CSV file is converted into an Excel table, you will notice that the _Start_, _End_ and _Reference sequence_ columns are replaced by a _'g. or m.'_ column. The package allows this format. However, in the _pRocess_ function (explained below), the OMIA parameter has to be set to TRUE (default = FALSE). 
+
+### (3) BED file
+A BED (Browser Extensible Data) file is needed for annotation along the way. A BED file had a fixed format, including 3 reuired fields:
+
+* chrom
+* chromStart
+* chromEnd
+
+and 9 additional optional BED fields:
+
+* name
+* score
+* strand
+* thickStart
+* thickEnd
+* itemRgb
+* blockCount
+* blockSizes
+* blockStarts
+
+Such a BED file can be downloaded [here](http://genome.ucsc.edu/cgi-bin/hgTables) at __the UCSC table Browser__. For our example, we need a BED file for the dog. In our example following criteria were chosen:
+
+* clade: Mammal
+* genome: Dog
+* assembly: Sep. 2011 (Broad CanFam3.1/canFam3) (*)
+* group: Genes and Gene predictions
+* track: NCBI RefSeq (*)
+* table: RefSeq All (ncbiRefSeq)
+* region: genome
+* output format: BED - browser extensible data
+* output filename: dog_BED_NCBI (*)
+
+(*) These criteria were specifically chosen for this example. Assembly versions change over time and obviously are updates. The assembly you choose should be the same version as the assembly used to create/map the variants in your variants file. Next to NCBI RefSeq, you can also choose _Ensembl Genes_. The output file can be found in the package [Data folder](https://github.com/FrederiqueBoeykens/variantscanR/tree/main/data). 
+
+However, this BED file itself needs some extra annotation. For this reason yet another file needs to be
+downloaded from the same [site](http://genome.ucsc.edu/cgi-bin/hgTables). The same criteria apply for
+this file as the previous BED file, except for the output format. Instead of chosing _BED - browser extensible data_, _all fields from selected table_ is required. 
+
+And that was it! Now you are ready to do some variant filtering!
+
+### (Extra) Chromosome names table
+Next, depending on the reference genomes used for creating the VCF file, the chromosome notation can have
+different denominations. The _chromosomenameR_ function allows the conversion, if needed. The chromosomes
+have multiple different nomenclatures depending on the reference used for mapping. For example, in dogs,
+chromosome 1 can be noted as CM000001.3 or NC_006583.3, using the GenBank or RefSeq sequence,
+respectively. This notation needs to be changed to the ‘chrN’ notation, with N being the number of the
+chromosome. This is done using the _chromosomerenamR_ function.
+
+For this conversion a file a needed providing both names. For the dog, such a file is available in the package [Data folder](https://github.com/FrederiqueBoeykens/variantscanR/tree/main/data). 
+The original names are stored in the first column and the 'chrN' names are placed in the second column.
+
 ## VCFscanneR
 Because the VCF file format is not one of the standard formats that can be uploaded in the R environment, the vcfscannR function was created.
 This function uploads a multisample sample VCF file into the R environment and turns it into a single
 sample VCF, ready for downstream analysis. 
 The function has 2 parameters. The first parameter is the name of the VCF file that needs to be uploaded
 OR contains the path to the file. The second parameter is the name of the sample of interest. The sample
-name has to match with that of the VCF file. In our example, the name is "sample_849". 
+name has to match with that of the VCF file. In our example, the name is _sample_849_. 
 
-R CODE 
+The example VCF file (_subset_vcf_multisample_) has 31 rows and 10 columns and contains variants found within chromosome 5. 
+
+```{r, echo=FALSE}
+vcfscanneR <- function(x, sample){
+  vcf <- vcfR::read.vcfR(x)
+  fix <- vcf@fix
+  fix <- as.data.frame(fix, stringsAsFactors = FALSE)
+  gt <- vcf@gt
+  gt <- as.data.frame(gt, stringsAsFactors = FALSE)
+  fix <- cbind(fix, gt[,1])
+  names(fix)[9] <- "FORMAT"
+  gt <- gt %>% dplyr::select(dplyr::all_of(sample))
+  vcf <- cbind.data.frame(fix,gt)
+  vcf_names <- c("chrom", "pos", "id", "ref", "alt", "qual", "filter", "info", "format", "sample")
+  names(vcf) <- vcf_names
+  return(vcf)
+}
+```
+
 
 
 ## chromosomenameR
