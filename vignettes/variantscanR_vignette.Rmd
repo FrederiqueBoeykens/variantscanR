@@ -1,5 +1,5 @@
 ---
-title: "variantscanR vignette"
+title: "_variantscanR_ vignette"
 author: "Fréderique Boeykens"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
@@ -14,7 +14,7 @@ One of the main goals in the genetics field is the identification of genetic var
 certain phenotype. This goal has been facilitated for several years by the introduction of next-generation
 sequencing technologies. At present time, most of the tools available for the evaluation of whole-genome
 or exome sequencing (WGS and WES, respectively) data are solely applicable for human analysis. For this
-reason, we developed variantscanR, an R-package, for the easy and straightforward identification of known
+reason, we developed _variantscanR_, an _R-package_, for the easy and straightforward identification of known
 disease-causing variants from a large collection of variants present in dogs and other animals.
 
 The R-package variantscanR enables the filtering of variant call format (VCF file) files for the presence
@@ -84,12 +84,12 @@ Following columns need to be specified:
 
 The columns in __bold__ are mandatory, the other ones are optional. The optional columns need to be included in the file, but don't need values, so _NA_ values are allowed. 
 
-BUT, however, the function also allows another 'specific' format that can be donwloaded straight from the internet, to make it a little more user-friendly. 
-The file can be downloaded from [here](https://www.omia.org/home/). More specifically, if you want to download the known-disease causing variants of the dog, a CSV document can be obtained from [here](https://www.omia.org/results/?gb_species_id=9615&search_type=advanced&result_type=variant) at the bottom __'Download table as CSV'__.
+However, the function also allows another 'specific' format that can be downloaded straight from the internet, to make it a little more user-friendly. 
+The file can be downloaded from [here](https://www.omia.org/home/). For example, if you want to download the known-disease causing variants of the dog, a CSV document can be obtained from [here](https://www.omia.org/results/?gb_species_id=9615&search_type=advanced&result_type=variant) at the bottom __'Download table as CSV'__.
 When the CSV file is converted into an Excel table, you will notice that the _Start_, _End_ and _Reference sequence_ columns are replaced by a _'g. or m.'_ column. The package allows this format. However, in the _pRocess_ function (explained below), the OMIA parameter has to be set to TRUE (default = FALSE). 
 
 ### (3) BED file
-A BED (Browser Extensible Data) file is needed for annotation along the way. A BED file had a fixed format, including 3 reuired fields:
+A BED (Browser Extensible Data) file is needed for annotation along the way. A BED file had a fixed format, including 3 required fields:
 
 * chrom
 * chromStart
@@ -119,7 +119,7 @@ Such a BED file can be downloaded [here](http://genome.ucsc.edu/cgi-bin/hgTables
 * output format: BED - browser extensible data
 * output filename: dog_BED_NCBI (*)
 
-(*) These criteria were specifically chosen for this example. Assembly versions change over time and obviously are updates. The assembly you choose should be the same version as the assembly used to create/map the variants in your variants file. Next to NCBI RefSeq, you can also choose _Ensembl Genes_. The output file can be found in the package [Data folder](https://github.com/FrederiqueBoeykens/variantscanR/tree/main/data). 
+(*) These criteria were specifically chosen for this example. Assembly versions change over time and obviously are updated. The assembly you choose should be the same version as the assembly used to create/map the variants in your variants file. Next to _NCBI RefSeq_, you can also choose _Ensembl Genes_. The output file can be found in the package [Data folder](https://github.com/FrederiqueBoeykens/variantscanR/tree/main/data). 
 
 However, this BED file itself needs some extra annotation. For this reason yet another file needs to be
 downloaded from the same [site](http://genome.ucsc.edu/cgi-bin/hgTables). The same criteria apply for
@@ -146,6 +146,8 @@ The function has 2 parameters. The first parameter is the name of the VCF file t
 OR contains the path to the file. The second parameter is the name of the sample of interest. The sample
 name has to match with that of the VCF file. In our example, the name is _sample_849_. 
 
+NEED ORIGINAL SUBSET VCF FILE!!!
+
 The example VCF file (_subset_vcf_multisample_) has 31 rows and 10 columns and contains variants found within chromosome 5. 
 
 ```{r, echo=FALSE}
@@ -165,16 +167,262 @@ vcfscanneR <- function(x, sample){
 }
 ```
 
+After uploading the multisample VCF file with _vcfscanneR_ function, the VCF looks like this:
 
+```{r}
+data(subset_vcf_multisample, package = "variantscanR")
+# VCF file subset dimentions
+dim(subset_vcf_multisample)
+# VCF file first 10 rows
+head(subset_vcf_multisample)
+```
+
+As you can see, the chromosomes do not have the required 'chrN' notation, for this the _chromosomenameR_ function needs to be carried out.
 
 ## chromosomenameR
 
+```{r, echo=FALSE}
+chromosomenameR <- function(a,b){
+  new <- a
+  new[] <- lapply(a, function(x) b[,2][match(x, b[,1])])
+  a[,1] <- new[,1]
+  a[] <- lapply(a, as.character)
+  return(a)
+}
+```
+
+```{r}
+data("dog_chromosome_names", package = "variantscanR")
+a <- subset_vcf_multisample
+b <- dog_chromosome_names
+vcf <- chromosomenameR(a,b)
+head(vcf)
+```
+
+Now, our VCF file is ready for variant filtering. 
 
 ## annotateR_NCBI.R
+As was explained in the input section above, the BED file itself needs anotating. For this step, 2 separate functions were created that essentially do the same thing. One function can be used for a _NCBI RefSeq_ BED file. Whereas the other function was designed to handle an _Ensemble Genes_ (see section 'input file').
+
+For demonstrative purposes, only the NCBI specific function, _annotateR_NCBI_ function will be demonstrated for as the BED file used in this example is _NCBI RefSeq_ based.
+
+```{r, echo=FALSE}
+annotateR_NCBI <- function(a, b){
+  a[] <- lapply(a, as.character)
+  b[] <- lapply(b, as.character)
+  refseq_transcripts <- a[,4]
+  BED <- a
+  new <- BED
+  new[] <- lapply(BED, function(x) b$name2[match(x, b$name)])
+  BED[,4] <- new[,4]
+  BED[] <- lapply(BED, as.character)
+  BED[,13] <- refseq_transcripts
+  BED <- BED[complete.cases(BED[,4]),]
+}
+```
+
+This is what the NCBI based BED file looks like:
+
+```{r}
+data("dog_BED_NCBI", package = "variantscanR")
+head(dog_BED_NCBI)
+```
+
+You can see that the 3 required and the 9 additional fields are present.
+Now let's annotate this file with the second file we downloaded from UCSC table browser.
+
+```{r}
+data("dog_BED_NCBI", package = "variantscanR")
+data("dog_allfields_NCBI", package = "variantscanR")
+a <- dog_BED_NCBI
+b <- dog_allfields_NCBI
+BED_file_fully_annotated <- annotateR_NCBI(a,b)
+head(BED_file_fully_annotated)
+```
+
+A 13th column is added, containing the gene names instead of just the transcripts that are present in the BED file with 12 columns. This is important because _the variants file_ only contains gene names and not transcript names.
+
+__NOTE__: The entire workflow has been performed on the same dataset using the same _variants file_ for both the _NCBI refseq_ BED file and the _Ensembl genes_ BED file. It was noticed that overall less variants were attained after filtering with the  _Ensembl genes_ BED file compared to the _NCBI refseq_ BED file. This is mostly due to different annotation of the reference sequence and that less gene names were present/annotated in the _Ensembl genes_ BED file.
+
 ## pRocess
+Now that all the input files have been amended for downstream analysis. A final preprocessing step, that is a mandatory in the pipeline, can be performed. 
+In this processing step, the _variants file_ gets annotated and on top of that, a quality control step 
+
+```{r, echo=FALSE}
+pRocess <- function(variants_file, BED_file, refseq, QC = TRUE, organism = NULL, OMIA = FALSE){
+  if (OMIA == TRUE){
+    variants_file <- variants_file[stats::complete.cases(variants_file[1]), ]
+    colnames(variants_file)[1] <- "Chr."
+    variants_file <- variants_file[stats::complete.cases(variants_file[2]), ]
+    colnames(variants_file)[2] <- "g. or m"
+    colnames(variants_file)[3] <- "Reference Sequence"
+  } else {
+    variants_file <- variants_file[stats::complete.cases(variants_file[1]), ]
+    colnames(variants_file)[1] <- "Chromosome"
+    variants_file <- variants_file[stats::complete.cases(variants_file[2]), ]
+    colnames(variants_file)[2] <- "Start"
+    colnames(variants_file)[3] <- "End"
+    colnames(variants_file)[4] <- "Reference"
+    colnames(variants_file)[5] <- "Reference Sequence"
+  }
+  for (r in 1:nrow(variants_file)){
+    if (OMIA == TRUE){
+      id <- variants_file[r,3]
+      id <- gsub(" ", "", id) #remove potential spaces between CanFam and 3.1 so we can filter them out in next step
+    } else {
+      id <- variants_file[r,5]
+      id <- gsub(" ", "", id) #remove potential spaces between CanFam and 3.1 so we can filter them out in next step
+    }
+  }
+  if (missing(refseq)){
+    variants_file <- variants_file
+  } else {
+    variants_file <- subset(variants_file, variants_file$'Reference Sequence'== refseq )
+  }
+  if (OMIA == TRUE){
+    between <- variants_file
+    for (r in 1:nrow(between)){
+      original <- between[r,2]
+      original <- gsub(",","", original)
+      original <- gsub(">", "", original)
+      original <- gsub("_", "-", original)
+      between[r,2] <- original
+    }
+    final <- data.frame()
+    for (r in 1:nrow(between)){
+      output = NULL
+      row <- between[r,]
+      nrc <- ncol(between)
+      id <- between[r,2]
+      id <- stringr::str_split(id, pattern = ("-"), n = 2, simplify = TRUE)
+      start_pos <- id[1,1]
+      end_pos <- id[1,2]
+      output <- cbind(row[,1], start_pos, end_pos, row[,3:nrc])
+      output_temp <- data.frame(output)
+      final <- rbind(final, output_temp)
+    }
+    colnames(final)[1:4] <- c("Chromosome", "Start", "End", "Reference Sequence")
+    final <- data.frame(lapply(final, as.character), stringsAsFactors = FALSE)
+    for(r in 1:nrow(final)){
+      pattern_loc_start <- rebus::optional(or("g","m")) %R% rebus::optional(DOT) %R% rebus::capture(one_or_more(DGT)) %R% rebus::optional(WRD)
+      pattern_loc_end <- rebus::capture(one_or_more(DGT)) %R% rebus::optional(WRD) %R% rebus::optional(one_or_more(DGT))
+      start <- stringr::str_match(final[r,2], pattern = pattern_loc_start)
+      end <- stringr::str_match(final[r,3], pattern = pattern_loc_end)
+      final[r,2] <- start[,2]
+      final[r,3] <- end[,2]
+    }
+    for (r in 1:nrow(variants_file)){
+      original <- as.character(variants_file[r,2])
+      original <- gsub(",","", original)
+      original <- gsub("_", "", original)
+      original <- gsub("g.", "", original)
+      original <- gsub("m.", "", original)
+      original <- gsub("[0-9]", "", original)
+      original <- gsub("del", "", original)
+      original <- gsub("dup", "", original)
+      original <- gsub("inv", "", original)
+      original <- gsub("ins", "", original)
+      if (grepl(">", original, fixed = TRUE)){
+        pattern <- rebus::capture(or("T", "A", "C", "G")) %R% ">" %R% or("T", "A", "C", "G")
+        nt <- stringr::str_match(original, pattern = pattern)
+        original <- nt[1,2]
+      } else {
+        original <- original
+      }
+      variants_file[r,2] <- original
+    }
+    final$Chromosome <- paste0("chr", final$Chromosome)
+    nrccc <- ncol(final)
+    final <- cbind(final[,1:3], variants_file[,2], final[,4:nrccc])
+    colnames(final)[4] <- "Reference"
+  } else {
+    final <- variants_file
+    final$Chromosome <- paste0("chr", final$Chromosome)
+  }
+  if (QC == TRUE){ #until now everything was the same for QC = TRUE or FALSE
+    random1 <- data.frame()
+    for (r in 1:nrow(final)){
+      row <- final[r,]
+      nrcc <- ncol(final)
+      a <- final[r,1]
+      b <- as.numeric(final[r,2])
+      c <- as.numeric(final[r,3])
+      c[is.na(c)] <- b
+      Check <- Biostrings::getSeq(organism, a, start = b, end = c)
+      Check <- as.character(Check)
+      random <- cbind(row[,1:4], Check, row[,5:nrcc], row.names = NULL)
+      random2 <- data.frame(random)
+      random1 <- rbind(random1, random2)
+    }
+    test <- unique(random1)
+    proc_variants_file <- data.frame()
+    for (r in 1:nrow(test)){
+      end <- ncol(test)
+      row <- test[r,]
+      gene <- test[r,8]
+      index <- which(BED_file$V4 == gene) #gene name
+      orientation <- BED_file[index,6]    #orientatio + or -
+      orientation <- as.character(orientation)
+      if (length(unique(orientation)) == 1){
+        orientation <- orientation[1]
+      } else {
+        orientation <- "Information lacking"
+      }
+      proc_variants_file1 <- cbind(row[,1:5], orientation, row[,6:end], row.names = NULL)
+      proc_variants_file2 <- data.frame(proc_variants_file1)
+      proc_variants_file <- rbind(proc_variants_file, proc_variants_file2)
+    }
+    proc_variants_file <- data.frame(lapply(proc_variants_file, as.character), stringsAsFactors = FALSE)
+    for (r in 1:nrow(proc_variants_file)){
+      if (proc_variants_file[r,6] == "-") {
+        dna <- proc_variants_file[r,5]
+        dna <- Biostrings::DNAString(dna)
+        dna <- Biostrings::reverseComplement(dna)
+        dna <- as.character(dna)
+        proc_variants_file[r,5] <- dna
+      } else if (proc_variants_file[r,6] == "+"){
+        dna <- proc_variants_file[r,5]
+        proc_variants_file[r,5] <- dna
+      } else {
+        dna <- "Check manually"
+        proc_variants_file[r,5] <- dna
+      }
+    }
+    proc_variants_file[is.na(proc_variants_file)] <- "NA"
+    for (r in 1:nrow(proc_variants_file)){
+      if(proc_variants_file[r,4] == proc_variants_file[r,5]){
+        proc_variants_file[r,5] <- proc_variants_file[r,5]
+      } else {
+        proc_variants_file[r,5] <- "Check manually"
+      }
+    }
+  } else {proc_variants_file <- final}
+  return(proc_variants_file)
+}
+```
+
+```{r, echo=FALSE, message= FALSE}
+library(BSgenome)
+library(BSgenome.Cfamiliaris.UCSC.canFam3)
+library(rebus)
+```
+
+
+```{r}
+data("variants_file_OMIA_dog", package = "variantscanR")
+variants_file <- variants_file_OMIA_dog
+BED_file <- BED_file_fully_annotated
+refseq <- "CanFam3.1"
+organism <- BSgenome.Cfamiliaris.UCSC.canFam3
+variant_file_processed <- pRocess(variants_file, BED_file, refseq, QC = TRUE, organism, OMIA = TRUE)
+head(variant_file_processed)
+```
+
+
+
 
 # Variant filtering
-## variantfiltR
+## variantfilt
 
 # Diversity
 ## diveRsity
