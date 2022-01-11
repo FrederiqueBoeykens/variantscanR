@@ -138,7 +138,7 @@ chromosome. This is done using the _chromosomerenamR_ function.
 For this conversion a file a needed providing both names. For the dog, such a file is available in the package [Data folder](https://github.com/FrederiqueBoeykens/variantscanR/tree/main/data). 
 The original names are stored in the first column and the 'chrN' names are placed in the second column.
 
-## VCFscanneR
+## _VCFscanneR_
 Because the VCF file format is not one of the standard formats that can be uploaded in the R environment, the vcfscannR function was created.
 This function uploads a multisample sample VCF file into the R environment and turns it into a single
 sample VCF, ready for downstream analysis. 
@@ -179,7 +179,7 @@ head(subset_vcf_multisample)
 
 As you can see, the chromosomes do not have the required 'chrN' notation, for this the _chromosomenameR_ function needs to be carried out.
 
-## chromosomenameR
+## _chromosomenameR_
 
 ```{r, echo=FALSE}
 chromosomenameR <- function(a,b){
@@ -201,7 +201,7 @@ head(vcf)
 
 Now, our VCF file is ready for variant filtering. 
 
-## annotateR_NCBI.R
+## _annotateR_NCBI.R_
 As was explained in the input section above, the BED file itself needs anotating. For this step, 2 separate functions were created that essentially do the same thing. One function can be used for a _NCBI RefSeq_ BED file. Whereas the other function was designed to handle an _Ensemble Genes_ (see section 'input file').
 
 For demonstrative purposes, only the NCBI specific function, _annotateR_NCBI_ function will be demonstrated for as the BED file used in this example is _NCBI RefSeq_ based.
@@ -240,13 +240,30 @@ BED_file_fully_annotated <- annotateR_NCBI(a,b)
 head(BED_file_fully_annotated)
 ```
 
-A 13th column is added, containing the gene names instead of just the transcripts that are present in the BED file with 12 columns. This is important because _the variants file_ only contains gene names and not transcript names.
+A 13th column (V13) is added, containing the gene names instead of just the transcripts that are present in the BED file with 12 columns. This is important because _the variants file_ only contains gene names and not transcript names.
 
 __NOTE__: The entire workflow has been performed on the same dataset using the same _variants file_ for both the _NCBI refseq_ BED file and the _Ensembl genes_ BED file. It was noticed that overall less variants were attained after filtering with the  _Ensembl genes_ BED file compared to the _NCBI refseq_ BED file. This is mostly due to different annotation of the reference sequence and that less gene names were present/annotated in the _Ensembl genes_ BED file.
 
-## pRocess
+## _pRocess_
 Now that all the input files have been amended for downstream analysis. A final preprocessing step, that is a mandatory in the pipeline, can be performed. 
-In this processing step, the _variants file_ gets annotated and on top of that, a quality control step 
+
+The _pRocess_ function has several parameters of which a couple are optional.
+Because files that are manually made or adjusted are prone to human errors, quality control might be useful. The _pRocess_ function includes some optional quality control filters. 
+For example, the genomic locations provided for each variants are screened for errors by comparison with a reference genome. If a mismatch is encountered, the user will get notified if this error and will be asked to check this information for this variant.
+Next to this, an assembly version check can be performed by providing the "refseq" parameter with this information. If a variant does not belong to the right verion, that variant is removed from the VCF file. This is _"CanFam3.1"_ in our example. 
+If the _variants file_ is downloaded from the OMIA website (as explained above in the Input files section), it is possible to provide the function with this information by setting the _OMIA paramater_ to TRUE (this is FALSE by default). 
+
+In summary, we have 6 parameters:
+1. variants_file: _Required_
+2. BED_file: _Required_
+3. refseq: _Optional_ and is TRUE by default
+4. QC: _Optional_
+5. organism: _Optional_ but _Required_ if QC = TRUE
+6. OMIA: _Optional_ and is FALSE by default
+
+
+
+
 
 ```{r, echo=FALSE}
 pRocess <- function(variants_file, BED_file, refseq, QC = TRUE, organism = NULL, OMIA = FALSE){
@@ -405,9 +422,11 @@ pRocess <- function(variants_file, BED_file, refseq, QC = TRUE, organism = NULL,
 library(BSgenome)
 library(BSgenome.Cfamiliaris.UCSC.canFam3)
 library(rebus)
+library(tibble)
 ```
 
 
+#### test 1: Quality control; OMIA = TRUE and QC = TRUE
 ```{r}
 data("variants_file_OMIA_dog", package = "variantscanR")
 variants_file <- variants_file_OMIA_dog
@@ -419,13 +438,109 @@ head(variant_file_processed)
 ```
 
 
+This shows a good example of the quality control that is performed on the location of the variants. For the first SNP located on chromosome 6 at location 55146549, the user-defined _variants_file_ states that a C is should be present at that location. However, when comparing with an online Reference Sequence, no match is found. The output tells the user to double check the information on this variant. When looking up this variant on OMIA.org, from where the file was downloaded, it shows that it is an insertion of C on that location, which explains why it did not match the reference. For as all the other information was correct, it won't cause any problems for downstream analysis. 
+For the 5th variant, no reference was given and thereforethat row needs revisioning. 
+
+
+#### test 2: No quality control; OMIA = TRUE and QC = FALSE
+#### test 3: No refseq given; OMIA = TRUE and QC = TRUE
+#### test 4: Other format provided, OMIA = FALSE, QC = TRUE
 
 
 # Variant filtering
-## variantfilt
+After the preprocessing step are done, the filtering step can be performed. 
+
+## _variantfiltR_
+HERE NEEDS TO COME THE FUNCTION AND THE EXAMPLE R CODE
+
+## Reporting
+For demonstrative purposes, not the entire VCF dataset was used for the worked out example in this vignette. However, we do believe it is important to work out a real example using the entire dataset and show the outcome. For this reason, images were made of the real outcome and are shown below. 
+
+So if we go through the entire pipeline, after the _variantfiltR_ function, an html report is created. The minimal output is an interactive overview of the various table created after filtering (fig2). By clicking on the desired table, the output will be displayed.
+
+
+![Figure 2: Report overview of tables](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/1_report_overview.jpg)
+
+Next to this, breeding advice is also provided for heterozygous (fig3) and homozygous (fig4) variants according to the inheritance pattern.
+
+
+![Figure 3: Heterozygous breeding advice](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/5_BA_heterozygous.jpg)
+
+
+![Figure 4: Homozygous breeding advice](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/6_BA_homozygous.jpg)
+
+Finally, if a breed is provided as a parameter in the _variantfiltR_ function, 3 other tables are acquired. One table containes the most important variants, being the variants that are not homozygous wild type AND are found within the breed of interest. Because known-disease causing variants are checked within the animal of interest, these variants might be important for health and diagnostics. (fig5). 
+
+
+![Figure 5](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/1_report_most_important.jpg)
+
+
+The second table contains variants that are not homozygous wild type but are not known to have implications in or known to occur in the breed of interest. Still, this kind of information might be important to report (fig6). 
+
+
+![Figure 6](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/3_report_not_breed.jpg)
+
+
+Lastly, the third table contain the variants found or not found within the breed of interest that are homozygous wild type (fig7). 
+
+
+![Figure 7](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/4_report_WT.jpg)
+
+
 
 # Diversity
+The _variantscanR_ package also features a diversity analysis. Although this is not an in-depth method to study diversity, it does offer many possibilities. 
+
+
 ## diveRsity
+The input is a multisample VCF file and the name of one specific sample the user is interested in. 
+
+NEEDS THE DATASET!!
+
+Most of the output of the _diveRsity_ function are graphs, however, also a table with the actual diversity values is given. 
+The level of heterozygosity is calculated as followed:
+
+
+$H_{e} = \displaystyle \frac{n_{He}}{n_{n}}$
+
+
+With $H_{e}$ being the level of heterozygosity, $n_{He}$ the number of heterozygous loci in the sample of interest and $n_{n}$, the total number of loci used. $n_{n}$ is the same for every sample of the multisample VCF file. 
+
+
+
+## Reporting
+As with the _variantfiltR_ function, the not the entire VCF dataset was used in the worked-out example for the _diveRsity_ function. However, the graphs of the real example are displayed below.
+
+The first graph gives a basic overview of all the samples included in the multi-sample VCF file. The level of heterozygosity is shown on the y-axis and the x-axis displays the different breeds present.
+
+
+![Figure 8: Basic overview](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity2.jpg)
+
+
+The second graph reveals the name of every sample.
+
+
+![Figure 9: fully annotated](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity3.jpg)
+
+
+The third graph only reveals the name of the sample of interest, that was provided as a parameter to the _diveRsity_ function.
+
+
+
+![Figure 10](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity5.jpg)
+
+
+Lastly, the fourth graph only shows the highest sample of every breed.
+
+
+![Figure 11](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity6.jpg)
+
+
+Next to the graphs, a table is included in the output of the _diveRstity_ function, containing the heterozygosity values per sample.
+
+
+![Figure 12](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity1.jpg)
+
 
 # Extra
 
