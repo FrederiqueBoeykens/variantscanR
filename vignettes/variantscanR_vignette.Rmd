@@ -170,12 +170,16 @@ vcfscanneR <- function(x, sample){
 After uploading the multisample VCF file with _vcfscanneR_ function, the VCF looks like this:
 
 ```{r}
-data(subset_vcf_multisample, package = "variantscanR")
+data(vcf_raw_subset, package = "variantscanR")
+x <- vcf_raw_subset
+sample <- "sample_9"
+vcf <- vcfscanneR(x,sample)
 # VCF file subset dimentions
-dim(subset_vcf_multisample)
+dim(vcf)
 # VCF file first 10 rows
-head(subset_vcf_multisample)
+head(vcf)
 ```
+
 
 As you can see, the chromosomes do not have the required 'chrN' notation, for this the _chromosomenameR_ function needs to be carried out.
 
@@ -192,8 +196,7 @@ chromosomenameR <- function(a,b){
 ```
 
 ```{r}
-data("dog_chromosome_names", package = "variantscanR")
-a <- subset_vcf_multisample
+a <- vcf
 b <- dog_chromosome_names
 vcf <- chromosomenameR(a,b)
 head(vcf)
