@@ -20,8 +20,11 @@ data in veterinary medicine for diagnostic purposes.
 Fréderique Boeykens 
 
 Laboratory of Animal Genetics
+
 Department of Veterinary and Biosciences
+
 Faculty of Veterinary Medicine
+
 Ghent University
 
 
