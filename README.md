@@ -3,9 +3,9 @@
 
 # variantscanR
 
-<img src='man/figures/logo.png' align="right" height="139" />
-
 <!-- badges: start -->
+
+<img src='man/figures/logo.png' align="right" height="139" />
 
 <!-- badges: end -->
 
