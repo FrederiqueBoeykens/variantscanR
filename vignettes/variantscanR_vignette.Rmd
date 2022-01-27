@@ -8,6 +8,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+
 # Introduction
 
 One of the main goals in the genetics field is the identification of genetic variation accountable for a
@@ -46,7 +47,7 @@ Disclaimer: Not the entire VCF dataset is used for as this is a very large file.
 
 WES data were obtained from 16 different dogs for an independent project at the laboratory. 
 The data used in this vignette is for purely demonstrative purposes. 
-One sample, from here on referred to as sample_849, was chosen randomly out of the pool of 16 dogs and is
+One sample, from here on referred to as sample_9, was chosen randomly out of the pool of 16 dogs and is
 a yellow, female Labrador retriever. 
 
 
@@ -144,11 +145,9 @@ This function uploads a multisample sample VCF file into the R environment and t
 sample VCF, ready for downstream analysis. 
 The function has 2 parameters. The first parameter is the name of the VCF file that needs to be uploaded
 OR contains the path to the file. The second parameter is the name of the sample of interest. The sample
-name has to match with that of the VCF file. In our example, the name is _sample_849_. 
+name has to match with that of the VCF file. In our example, the name is _sample_9_. 
 
-NEED ORIGINAL SUBSET VCF FILE!!!
-
-The example VCF file (_subset_vcf_multisample_) has 31 rows and 10 columns and contains variants found within chromosome 5. 
+The example VCF file (_SNPs.recode.subset.rename.vcf.gz_) has 31 rows and 10 columns and contains variants found within chromosome 5. 
 
 ```{r, echo=FALSE}
 vcfscanneR <- function(x, sample){
@@ -169,14 +168,13 @@ vcfscanneR <- function(x, sample){
 
 After uploading the multisample VCF file with _vcfscanneR_ function, the VCF looks like this:
 
-```{r}
-data(vcf_raw_subset, package = "variantscanR")
-x <- vcf_raw_subset
+```{r, message= FALSE}
+require(dplyr)
+library(variantscanR)
+pkg <- "variantscanR"
+vcf_file <- system.file("extdata", "SNPs.recode.subset.rename.vcf.gz", package = pkg)
 sample <- "sample_9"
-vcf <- vcfscanneR(x,sample)
-# VCF file subset dimentions
-dim(vcf)
-# VCF file first 10 rows
+vcf <- vcfscanneR(vcf_file, sample)
 head(vcf)
 ```
 
@@ -198,8 +196,8 @@ chromosomenameR <- function(a,b){
 ```{r}
 a <- vcf
 b <- dog_chromosome_names
-vcf <- chromosomenameR(a,b)
-head(vcf)
+vcf_chr <- chromosomenameR(a,b)
+head(vcf_chr)
 ```
 
 Now, our VCF file is ready for variant filtering. 
@@ -257,15 +255,13 @@ Next to this, an assembly version check can be performed by providing the "refse
 If the _variants file_ is downloaded from the OMIA website (as explained above in the Input files section), it is possible to provide the function with this information by setting the _OMIA paramater_ to TRUE (this is FALSE by default). 
 
 In summary, we have 6 parameters:
+
 1. variants_file: _Required_
 2. BED_file: _Required_
 3. refseq: _Optional_ and is TRUE by default
 4. QC: _Optional_
 5. organism: _Optional_ but _Required_ if QC = TRUE
 6. OMIA: _Optional_ and is FALSE by default
-
-
-
 
 
 ```{r, echo=FALSE}
@@ -429,32 +425,416 @@ library(tibble)
 ```
 
 
-#### test 1: Quality control; OMIA = TRUE and QC = TRUE
+#### Test 1 pRocess parameters: Quality control: yes, OMIA = TRUE and QC = TRUE
 ```{r}
 data("variants_file_OMIA_dog", package = "variantscanR")
 variants_file <- variants_file_OMIA_dog
 BED_file <- BED_file_fully_annotated
 refseq <- "CanFam3.1"
 organism <- BSgenome.Cfamiliaris.UCSC.canFam3
-variant_file_processed <- pRocess(variants_file, BED_file, refseq, QC = TRUE, organism, OMIA = TRUE)
-head(variant_file_processed)
+variant_file_processed_1 <- pRocess(variants_file, BED_file, refseq, QC = TRUE, organism, OMIA = TRUE)
+head(variant_file_processed_1)
 ```
 
 
 This shows a good example of the quality control that is performed on the location of the variants. For the first SNP located on chromosome 6 at location 55146549, the user-defined _variants_file_ states that a C is should be present at that location. However, when comparing with an online Reference Sequence, no match is found. The output tells the user to double check the information on this variant. When looking up this variant on OMIA.org, from where the file was downloaded, it shows that it is an insertion of C on that location, which explains why it did not match the reference. For as all the other information was correct, it won't cause any problems for downstream analysis. 
-For the 5th variant, no reference was given and thereforethat row needs revisioning. 
+For the 5th variant, no reference was given and therefore, that row needs revisioning. 
 
+#### test 2 pRocess paramaters: Quality control: No, OMIA = TRUE and QC = FALSE
+```{r}
+data("variants_file_OMIA_dog", package = "variantscanR")
+variants_file <- variants_file_OMIA_dog
+BED_file <- BED_file_fully_annotated
+refseq <- "CanFam3.1"
+organism <- BSgenome.Cfamiliaris.UCSC.canFam3
+variant_file_processed <- pRocess(variants_file, BED_file, refseq, QC = FALSE, organism, OMIA = TRUE)
+head(variant_file_processed)
+```
 
-#### test 2: No quality control; OMIA = TRUE and QC = FALSE
+This test shows the result of a variants file processed by the pRocess function but without the quality control (QC = FALSE). No _check_ or _orientation_ columns are provided and no warnings are given concerning the location of the variants. This way of processing might come in handy if it is preferred to run the pipeline without using the _BSgenome reference genomes_. If QC = FALSE, the _organism_ parameter can be left out. 
+
 #### test 3: No refseq given; OMIA = TRUE and QC = TRUE
-#### test 4: Other format provided, OMIA = FALSE, QC = TRUE
 
+#### test 4: Other format provided, OMIA = FALSE, QC = TRUE
+```{r}
+data("variants_file_alternative", package = "variantscanR")
+variants_file <- variants_file_alternative
+BED_file <- BED_file_fully_annotated
+organism <- BSgenome.Cfamiliaris.UCSC.canFam3
+variant_file_processed <- pRocess(variants_file, BED_file, refseq, QC = FALSE, organism, OMIA = FALSE)
+head(variant_file_processed)
+```
 
 # Variant filtering
 After the preprocessing step are done, the filtering step can be performed. 
 
 ## _variantfiltR_
-HERE NEEDS TO COME THE FUNCTION AND THE EXAMPLE R CODE
+```{r, echo=FALSE}
+variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
+  cicip <- colnames(variants_file)[5]
+  if (cicip == "Check"){
+    variants_file <- variants_file[,-c(5:6)]
+  } else {variants_file <- variants_file}
+  filter <- data.frame()
+  vcf$pos <- as.numeric(vcf$pos)
+  variants_file$Start <- as.numeric(variants_file$Start)
+  for (r in 1:nrow(variants_file)){ #for every row in the variants_file
+    nrrow <- nrow(variants_file)
+    x <- variants_file[r,1] #get the chromosome we're looking at  str(chr)
+    y <- as.numeric(variants_file[r,2]) #get the location whithin the chromosome  str(num)
+    subsetvcffile <- vcf[vcf$chrom == x,] #subset on only this chromosome
+    subsetvcffile <- subsetvcffile[subsetvcffile$pos == y,]  #next use location within chromosome to subset the subset
+    filter2 <- data.frame(subsetvcffile)
+    filter <- rbind.data.frame(filter, filter2)
+    svMisc::progress(r, nrrow)
+    if ( r == nrrow) message("Filtering step 1 done...but it's not done yet! Next up: step 2 ")
+    Sys.sleep(0.01)
+  }
+  filter <- unique(filter)
+  output1 <- data.frame()
+  filter <- filter[,-3]
+  filter <- filter[,-5:-7]
+  samplename <- names(filter)[6]
+  for (r in 1:nrow(filter)){
+    nrrow <- nrow(filter)
+    row <- filter[r,]
+    format <- unlist(strsplit(as.character(row[,5]), ":"))
+    ex <- which(format == "GT")  #depending on where GT is in the format string,
+    snp <- unlist(strsplit(as.character(row[,6]), ":")) #snp in sample_file column
+    snp <- snp[ex] #we choose the same number where GT was located
+    snp_sep <- unlist(strsplit(snp, "/"))
+    snp1 <- snp_sep[1] #homozyg 0/0 or 1/1 and heterozyg 0/1 or 1/0 so therefore as.numeric because
+    #until now chr
+    snp2 <- snp_sep[2]
+    if (snp1 == "." ){snp1 <- "A call cannot be made for this sample at this given locus"} else {
+      snp1 <- as.numeric(snp1)
+    }
+    if (snp2 == "." ){snp2 <- "A call cannot be made for this sample at this given locus"} else {
+      snp2 <- as.numeric(snp2)
+    }
+    #if numerical, there are stored as numerical values for downstream analysis
+    zygosity <- if(snp1 == "A call cannot be made for this sample at this given locus" | snp2 == "A call cannot be made for this sample at this given locus" ) {"Zygosity could not be determined"} else if (snp1 == snp2){
+      "Homozygous"} else {"Heterozygous"}
+    allele_alt <- unlist(strsplit(as.character(row[,4]), ","))
+    if (is.numeric(snp1) == FALSE){allele1 <- snp1} else if(snp1 == 0){allele1 <- row[,3]} else {allele1 <- allele_alt[snp1]} #location in row of alternative
+    #alleles for example alt: A,T,C and a 2 is given than 2 means T because 0 is ref_allele
+    #and starting from 1 to.... give alternative allles, so we find that location
+    if (is.numeric(snp2) == FALSE){allele2 <- snp2} else if(snp2 == 0){allele2 <- row[,3]} else {allele2 <- allele_alt[snp2]}
+    output <- cbind(row[,1:3], allele1, allele2, zygosity)
+    colnames(output) <- c("Chromosome", "Location", "Wild type", "First allele", "Second allele", "Zygosity")
+    output2 <- data.frame(output)
+    output1 <- rbind(output1, output2)
+    svMisc::progress(r, nrrow)
+    if ( r == nrrow) message("Filtering step2 done! Next up: annotation part1")
+    Sys.sleep(0.01)
+  }
+  result <- unique(output1)
+  result[] <- lapply(result, as.character)
+  result$Location <- as.numeric(result$Location)
+  #annotate filtered vcf file with the variants_file
+  annot <- data.frame()
+  for (r in 1:nrow(result)){ #for every row in the variants_file
+    nrrow <- nrow(result)
+    nccol <- ncol(variants_file)
+    row <- result[r,]
+    x <- result[r,1] #get the chromosome we're looking at
+    y <- result[r,2]
+    subset <- variants_file[variants_file$Chromosome == x,] #subset on only this chromosome
+    subset <- subset[subset$Start == y,]  #next use location within chromosome
+    annot1 <- cbind(row, subset[,5:nccol])
+    annot2 <- data.frame(annot1)
+    annot <- rbind(annot, annot2)
+    svMisc::progress(r, nrrow)
+    if ( r == nrrow) message("Annotation part1 done! Next up: annotation part2 ")
+    Sys.sleep(0.01)
+  }
+  # now we want the essentials to report, which are
+  # chr - location - exon - Refseq transcript - variant - nucleotide - variant protein?  - overerving - breeding advice
+  rownames(annot) <- c(1:nrow(annot))
+  #keep <- apply(annot[3:5], 1, function(x) length(unique(x[!is.na(x)])) != 1)
+  #keept <- annot[keep, ]
+  #kept <- rownames(keept)
+  colnames(BED_file_annot) <- c("chrom", "start", "end", "gene", "score", "strand", "thickstart", "thickend", "rgb", "blockcount", "blocksizes", "blockstarts", "transcript")
+  BED_file_annot$start <- as.numeric(BED_file_annot$start)
+  BED_file_annot$end <- as.numeric(BED_file_annot$end)
+  BED_file_annot$blockcount <- as.numeric(BED_file_annot$blockcount)
+  annot2 <- data.frame()
+  for (r in 1:nrow(annot)){ # last column is already the transcript that was originally in the BED file :p
+    nnrow <- nrow(annot)
+    row <- annot[r,]
+    nncol <- ncol(BED_file_annot)
+    nnncol <- ncol(annot)
+    x <- annot[r,1] #chromosome
+    y <- annot[r,2] #location
+    gene <- annot[r,9] #gene
+    subset <- BED_file_annot[BED_file_annot$gene == gene,] #we don't use location but gene
+    #so when using duplicates it duplicates the amount of times PLUS the original one, so we have to do nrow(subset)-1 but what
+    #can we do for the subsets with only 1 row, if you do -1 is becomes 0 and we lose the row and this can not happen.
+    #we check the amount of rows
+    #if is is more than 1, we can just use the duplicates manner
+    #otherwise, duplicates becomes the row itself and doesn't need duplicating
+    nr <- nrow(subset)
+    if(nr > 1){
+      nr <- nr-1
+      duplicates <- rbind(row, row[rep(1,nr),])
+    } else(duplicates <- row)
+    BED <- cbind(duplicates[,1:2], duplicates[,9], duplicates[,3:6], duplicates[,8], duplicates[,10:11], subset[,5:nncol], duplicates[,11:nnncol])
+    colnames(BED)[3] <- "Gene"
+    colnames(BED)[8] <- "Inheritance.pattern"
+    annot3 <- data.frame(BED)
+    annot2 <- rbind(annot2, annot3)
+    svMisc::progress(r, nnrow)
+    if ( r == nnrow) message("Annotation part2 done! Next up: reporting ")
+    Sys.sleep(0.01)
+  }
+  # We obtained a bigger dataframe now because every gene can have multiple transcripts
+  # Hier heb je terug een loop nodig aangezien er meerdere (transcripts, niet genen) in de subset kunnen zitten.
+  # because BED file (0-based) vs VCF (1-based) coordinate systems, we need to adjust one of the two.
+  # the location is obtained from OMIA-file/VCF and thus, 1-based
+  # I prefer adjusting the information of the BED file (so +1)
+  annot2$Gene <- as.character(annot2$Gene)
+  annot2$Location <- as.numeric(annot2$Location)  # stays the same
+  annot2$thickstart <- as.numeric(annot2$thickstart)
+  annot2$thickstart <- annot2$thickstart +1
+  annot2$thickend <- as.numeric(annot2$thickend)
+  annot2$thickend <- annot2$thickend +1
+  annot2$blockcount <- as.numeric(annot2$blockcount) # the amount of exons/blocks stays the same
+  report <- data.frame()
+  rownames(annot2) <- c(1:nrow(annot2))
+  for (r in 1:nrow(annot2)){
+    row <- annot2[r,]
+    nbrcol <- ncol(annot2)
+    nrrow <- nrow(annot2)
+    a <- annot2[r,13] #chromStart - thickstart (already +1)
+    b <- annot2[r,14] #chromEnd - thickend (already +1)
+    exons <- annot2[r,16] #the amount of exons
+    exonstarts <- unlist(strsplit(as.character(annot2[r,18]), ","))
+    exonstarts <- as.numeric(exonstarts)
+    exonstarts <- exonstarts # DO NOT ADD 1 - otherwise in the end, you have added 2, the 'starts' depend on the original value 'a'
+    exonstarts <- sapply(exonstarts, "+", a)
+    exonlengths <- unlist(strsplit(as.character(annot2[r,17]), ","))
+    exonlengths <- as.numeric(exonlengths)
+    #if exonlengths is length 1 --> diagonal function will behave badly, so we have to 'if' for this special case.
+    if (length(exonlengths) == 1){
+      exonlengths <- exonstarts + exonlengths
+    } else{
+      exonlengths <- sapply(exonlengths, "+", exonstarts)
+      exonlengths
+      exonlengths <- diag(x=exonlengths)
+      exonlengths
+      exonstarts <- t(exonstarts)
+      exonlengths <- t(exonlengths)
+      exonstarts <- t(exonstarts)
+      exonstarts
+      exonlengths <- t(exonlengths)
+      exonlengths
+    }
+    dfpos <- cbind(exonstarts, exonlengths)
+    dfpos <- data.frame(dfpos)
+    colnames(dfpos)[1] <- "start"
+    colnames(dfpos)[2] <- "length"
+    y <- annot2[r,2]
+    posit <- with(dfpos, dfpos$start <= y & dfpos$length >= y)
+    exonnr <- which(posit == TRUE)
+    if (length(exonnr) == 0){
+      exon_or_intron <- "Intronic"
+    } else {
+      exonnr <- as.character(exonnr)
+      exon_or_intron <- "exon"
+      exon_or_intron <- paste(exon_or_intron,exonnr, sep = "")
+    }
+    report1 <- cbind(row[,1:3], exon_or_intron, row[,4:nbrcol])
+    report2 <- tibble(report1)
+    report <- rbind(report,report2)
+    svMisc::progress(r, nrrow)
+    if ( r == nrrow) message("Annotation part2 done! Next up: reporting ")
+    Sys.sleep(0.01)
+  }
+  finalreport <- data.frame()
+  for (r in 1:nrow(report)){
+    nrrow <- nrow(report)
+    row <- report[r,]
+    Chromosome <- row[,1]
+    Location <- row[,2]
+    Gene <- row[,3]
+    Exon <- row[,4]
+    WildType <- row[,5]
+    Nucleotide1 <- row[,6]
+    Nucleotide2 <- row[,7]
+    zygosity <- row[,8]
+    RefSeq_transcipt <- row[,20]
+    Inheritance_pattern <- row[,9]
+    breeds <- row[,11]
+    Phenotype <- row[,10]
+    finalreport1 <- cbind(Chromosome,Location,Gene,Exon,WildType,Nucleotide1,Nucleotide2,zygosity,RefSeq_transcipt,Inheritance_pattern,Phenotype,breeds)
+    finalreport2 <- data.frame(finalreport1)
+    finalreport <- rbind(finalreport, finalreport2)
+    svMisc::progress(r, nrrow)
+    if ( r == nrrow) message("Waiting for report")
+    Sys.sleep(0.01)
+  }
+  colnames(finalreport) <- c("Chromosome", "Location", "Gene", "Exon or Intron", "Wild Type", "Allele 1", "Allele 2", "Zygosity", "Refseq Transcript", "Inheritance Pattern", "Variant Phenotype", "Breed(s)")
+  keep <- apply(finalreport[5:7], 1, function(x) length(unique(x[!is.na(x)])) != 1)
+  keept <- finalreport[keep, ]
+  kept <- as.numeric(rownames(keept))
+  high <- finalreport[kept,] #the more important rows
+  finalreport <- finalreport[-kept,] #What if there are no homozygous WT? exceptional case, but still
+  if (nrow(high) == 0){
+    high <- high
+  } else{
+    rownames(high) <- c(1:nrow(high)) #Then this step gives problems
+  }
+  if (nrow(finalreport) == 0){
+    finalreport <- finalreport
+  } else{
+    rownames(finalreport) <- c(1:nrow(finalreport))
+  }
+  #kept contains the 'name' of the rows that are homozygous variant OR heterozygous, so the more important rows that need to be reported with higher importance
+  prefix <- "Sample:"
+  sample_result <- paste(prefix, samplename)
+  #breed argument
+  if (missing(breed)){
+    high <- data.frame(lapply(high, as.character), stringsAsFactors=FALSE)
+    finalreport <- data.frame(lapply(finalreport, as.character), stringsAsFactors=FALSE)
+    coln <- colnames(finalreport)
+    title0 <- c("Variants", "present", "in", "sample", ":", " ", " ", " ", " ", " ", " ", " " )
+    extrarow1 <- as.data.frame(matrix(title0, ncol = 12, byrow = T))
+    colnames(extrarow1) <- coln
+    title2 <- c("Variants", "of", "interest", "found", "in", "sample", "but", "homozygous", "wild", "type", ": ", "" )
+    extrarow2 <- as.data.frame(matrix(title2, ncol = 12, byrow = T))
+    colnames(extrarow2) <- coln
+    empty <- c(" "," "," "," "," "," "," "," "," "," "," "," ")
+    emptyrow <- as.data.frame(matrix(empty, ncol = 12, byrow = T))
+    colnames(emptyrow) <- coln
+    R3port::html_list(high,title="Variants of high importance found within sample",
+                      footnote= sample_result,out="variants_maintaineda.html")
+    R3port::html_list(finalreport,title="Variants present in sample but homozygous Wild Type",
+                      footnote= sample_result,out="variants_maintainedb.html")
+    df1 <- rbind(title0,emptyrow,high,emptyrow,extrarow2,emptyrow,finalreport)
+  } else {
+    vectori <- numeric(0)
+    for (r in 1:nrow(high)){
+      breed_low <- tolower(breed)
+      breed_nospace <- stringr::str_replace_all(breed_low, stringr::fixed(" "), "")
+      row <- high[r,]
+      breed_compare <- tolower(as.character(row[12]))
+      breeds_nospace <- str_replace_all(breed_compare, fixed(" "), "")
+      breeds_split <- stringr::str_split(breeds_nospace, ",")
+      compare <- grepl(breed_nospace, breeds_split)
+      #if compare is TRUE, remember rowname and add it to vector
+      #at the end make two separate dataframes
+      #do this for high and finalreport dataframe
+      #at the end end, paste 4 dataframes to each other with in between an empty row containing a title
+      #if argument breed was not given, just ad high and finalreport together
+      # OR finalreport just is a separate raw.html file?
+      if (compare == TRUE){
+        new_row <- r
+        vectori <- c(vectori, new_row)
+      } else{
+        high <- high
+      }
+    }
+    vectori <- as.numeric(vectori)
+    highhigh <- high[vectori,]
+    if (length(vectori) == 0){
+      highhigh <- highhigh
+      high <- high
+    } else {
+      highhigh <- high[vectori,]
+      high <- high[-vectori,]
+      rownames(highhigh) <- c(1:nrow(highhigh))
+      rownames(high) <- c(1:nrow(high))
+    }
+    R3port::html_list(highhigh,title="Variants of high importance found within breed of interest",
+                      footnote= sample_result,out="variants_maintained1.html")
+    R3port::html_list(high,title="Variants of high importance but not found within breed of interest",
+                      footnote= sample_result,out="variants_maintained2.html")
+    R3port::html_list(finalreport,title="Variants present in sample but homozygous Wild Type",
+                      footnote= sample_result,out="variants_maintained3.html")
+    #add all 3 dataframes together
+    highhigh <- data.frame(lapply(highhigh, as.character), stringsAsFactors=FALSE)
+    high <- data.frame(lapply(high, as.character), stringsAsFactors=FALSE)
+    finalreport <- data.frame(lapply(finalreport, as.character), stringsAsFactors=FALSE)
+    coln <- colnames(finalreport)
+    title0 <- c("Variants", "present", "in", "sample", "and", "found", "in", "breed", "of", "interest", "! ", ":" )
+    extrarow0 <- as.data.frame(matrix(title0, ncol = 12, byrow = T))
+    colnames(extrarow0) <- coln
+    title1 <- c("Variants", "present", "in", "sample", "but", "not", "found", "in", "breed", "of ", "interest ", ":" )
+    extrarow1 <- as.data.frame(matrix(title1, ncol = 12, byrow = T))
+    colnames(extrarow1) <- coln
+    title2 <- c("Variants", "of", "interest", "found", "in", "sample", "but", "homozygous", "wild", "type", ": ", "" )
+    extrarow2 <- as.data.frame(matrix(title2, ncol = 12, byrow = T))
+    colnames(extrarow2) <- coln
+    empty <- c(" "," "," "," "," "," "," "," "," "," "," "," ")
+    emptyrow <- as.data.frame(matrix(empty, ncol = 12, byrow = T))
+    colnames(emptyrow) <- coln
+    df1 <- rbind(title0,emptyrow,highhigh,emptyrow,extrarow1,emptyrow,high,emptyrow,extrarow2,emptyrow,finalreport)
+  }
+  #HOMOZYGOUS DATAFRAME
+  homozygousdf <- data.frame()
+  homozygousdf[1,1] <- "autosomal recessive"
+  homozygousdf[2,1] <- "autosomal dominant"
+  homozygousdf[3,1] <- "X linked dominant (M)"
+  homozygousdf[4,1] <- "X linked dominant (F)"
+  homozygousdf[5,1] <- "X linked recessive (M)"
+  homozygousdf[6,1] <- "X linked recessive (F)"
+  homozygousdf[7,1] <- "mitochondrial"
+  homozygousdf[8,1] <- "Y linked"
+  homozygousdf[9,1] <- "NA"
+  homozygousdf[1,2] <- ":...ONLY combine with wild type animal! Offspring will be carrier and, on its turn, can ONLY be combined with wild type animal.....................***"
+  homozygousdf[2,2] <- ":...Animal can NOT be used for breeding purposes. Offspring would be carrier or homozygous and could also develop symptoms........................."
+  homozygousdf[3,2] <- ":...If male: affected animal can NOT be used for breeding purposes as all female offspring will be carrier and thus will be affected....................."
+  homozygousdf[4,2] <- ":...If female: Do NOT use animal for breeding purposes because all male offspring will inherit the defective X chromosome..............................."
+  homozygousdf[5,2] <- ":...If male: affected animal can be used ONLY if combined with a wild type female animal. Female offspring: carrier.  Male offspring free of disease."
+  homozygousdf[6,2] <- ":...If female: Do NOT use animal for breeding purposes as all male offspring will inherit defective X chromosome..........................................."
+  homozygousdf[7,2] <- ":...If female: animal can NOT be used for breeding purposes. Mitochondria are inherited maternally. If male: animal can be used......................."
+  homozygousdf[8,2] <- ":...If male: animal can NOT be used for breeding purposes as every male offspring will inherit the defective Y chromosome..............................."
+  homozygousdf[9,2] <- ":...Not able to provide breeding advice because inheritance pattern was not made available...................................................................."
+  colnames(homozygousdf) <- c("Inheritance pattern", "Breeding advice")
+  R3port::html_list(homozygousdf,title="Zygosity: Homozygous",
+                    footnote="***!IMPORTANT SIDE NOTE!: Do NOT use animal if signs or symptoms are already showing!
+          Animal must be capable of carrying out pregnancy.",out="homozygousIP.html")
+  #HETEROZYGOUS DATAFRAME
+  heterozygousdf <- data.frame()
+  heterozygousdf[1,1] <- "autosomal recessive"
+  heterozygousdf[2,1] <- "autosomal dominant"
+  heterozygousdf[3,1] <- "X linked dominant (M)"
+  heterozygousdf[4,1] <- "X linked dominant (F)"
+  heterozygousdf[5,1] <- "X linked recessive (M)"
+  heterozygousdf[6,1] <- "X linked recessive (F)"
+  heterozygousdf[7,1] <- "mitochondrial"
+  heterozygousdf[8,1] <- "Y linked"
+  heterozygousdf[9,1] <- "NA"
+  heterozygousdf[1,2] <- ":...Animal can be used for breeding purposes ONLY if combined with a wild type animal. Offspring will be 50% carrier and 50% wild type.............."
+  heterozygousdf[2,2] <- ":...Animal can NOT be used for breeding purposes......................................................................................................................."
+  heterozygousdf[3,2] <- ":...If male: affected animal can NOT be used for breeding purposes as all female offspring will be carrier and thus will be affected....................."
+  heterozygousdf[4,2] <- ":...If female: Do NOT use animal for breeding purposes as all male offspring will inherit defective X chromosome..........................................."
+  heterozygousdf[5,2] <- ":...If male: affected animal can be used ONLY if combined with a wild type female animal. Female offspring: carrier.  Male offspring free of disease."
+  heterozygousdf[6,2] <- ":...If female: animal can NOT be used for breeding purposes as 50% of male offspring will inherit defective X chromosome................................"
+  heterozygousdf[7,2] <- ":...If female: animal can NOT be used for breeding purposes. Mitochondria are inherited maternally. If male: animal can be used......................."
+  heterozygousdf[8,2] <- ":...If male: animal can NOT be used for breeding purposes as every male offspring will inherit the defective Y chromosome..............................."
+  heterozygousdf[9,2] <- ":...Not able to provide breeding advice because inheritance pattern was not made available...................................................................."
+  colnames(heterozygousdf) <- c("Inheritance pattern", "Breeding advice")
+  R3port::html_list(heterozygousdf,title="Zygosity: Heterozygous",out="heterozygousIP.html")
+  R3port::html_combine(out="report_variantscanR.html",toctheme=TRUE,
+                       template=paste0(system.file(package="R3port"),"/bootstrap.html"))
+  return(df1)
+}
+```
+
+```{r, message= FALSE}
+require(stringr)
+vcf <- vcf_chr
+variants_file <- variant_file_processed_1
+BED_file_annot <- BED_file_fully_annotated
+breed <- "Labrador retriever"
+report <- variantfiltR(vcf, variants_file, BED_file_annot, breed)
+head(report)
+```
+
+The output of this function is difficult to show because raw .html files are created that will pop up in your internet browser. This head of the report is shown here, but it is not very appealing. 
+For this reason, pictures of the output are provided in the following section.
+
 
 ## Reporting
 For demonstrative purposes, not the entire VCF dataset was used for the worked out example in this vignette. However, we do believe it is important to work out a real example using the entire dataset and show the outcome. For this reason, images were made of the real outcome and are shown below. 
@@ -467,27 +847,27 @@ So if we go through the entire pipeline, after the _variantfiltR_ function, an h
 Next to this, breeding advice is also provided for heterozygous (fig3) and homozygous (fig4) variants according to the inheritance pattern.
 
 
-![Figure 3: Heterozygous breeding advice](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/5_BA_heterozygous.jpg)
+![Figure 3: Heterozygous breeding advice](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/hetero.jpg)
 
 
-![Figure 4: Homozygous breeding advice](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/6_BA_homozygous.jpg)
+![Figure 4: Homozygous breeding advice](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/homoz.jpg)
 
 Finally, if a breed is provided as a parameter in the _variantfiltR_ function, 3 other tables are acquired. One table containes the most important variants, being the variants that are not homozygous wild type AND are found within the breed of interest. Because known-disease causing variants are checked within the animal of interest, these variants might be important for health and diagnostics. (fig5). 
 
 
-![Figure 5](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/1_report_most_important.jpg)
+![Figure 5](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/sample_9_1.jpg)
 
 
 The second table contains variants that are not homozygous wild type but are not known to have implications in or known to occur in the breed of interest. Still, this kind of information might be important to report (fig6). 
 
 
-![Figure 6](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/3_report_not_breed.jpg)
+![Figure 6](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/sample_9_2.jpg)
 
 
 Lastly, the third table contain the variants found or not found within the breed of interest that are homozygous wild type (fig7). 
 
 
-![Figure 7](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/4_report_WT.jpg)
+![Figure 7](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/sample_9_3.jpg)
 
 
 
@@ -497,9 +877,6 @@ The _variantscanR_ package also features a diversity analysis. Although this is 
 
 ## diveRsity
 The input is a multisample VCF file and the name of one specific sample the user is interested in. 
-
-NEEDS THE DATASET!!
-
 Most of the output of the _diveRsity_ function are graphs, however, also a table with the actual diversity values is given. 
 The level of heterozygosity is calculated as followed:
 
@@ -510,6 +887,91 @@ $H_{e} = \displaystyle \frac{n_{He}}{n_{n}}$
 With $H_{e}$ being the level of heterozygosity, $n_{He}$ the number of heterozygous loci in the sample of interest and $n_{n}$, the total number of loci used. $n_{n}$ is the same for every sample of the multisample VCF file. 
 
 
+```{r, echo=FALSE}
+diveRsity <- function(VCF, breeds, sample_name){
+  ID <- Heterozygosity <- Population <- NULL
+  vcf <- vcfR::read.vcfR(VCF)
+  example <- vcfR::gt.to.popsum(vcf) # population parameters, also n, we need all the rows where n = max!
+  vcf_gt <- vcf@gt # becomes a matrix with only the gt info of the
+  population_size <- as.numeric(ncol(vcf_gt)) -1 #the format column is included so: ncol - 1 = n -> this n value is the value we want to subset our example df on
+  subsetvcf <- example[example$n == population_size,]
+  rowindices <- rownames(subsetvcf) #characterstring chr [1:743614] "30" "31" "46" "48" ... these rowindices are the rows where n = 27
+  rowindices <- as.vector(rowindices)
+  gtinfosubset <- vcfR::extract.gt(vcf)
+  gtinfosubset <- data.frame(gtinfosubset)
+  row.names(gtinfosubset) <- 1:nrow(gtinfosubset)
+  newgtinfosubset <- gtinfosubset[rownames(gtinfosubset) %in% rowindices,]
+  newgtinfosubset <- data.frame(lapply(newgtinfosubset, as.character), stringsAsFactors = FALSE)
+  try <- apply(newgtinfosubset, c(1,2), function(x) if (x == "1/1" | x == "0/0"){x <- 0} else {x <- 1})
+  try2 <- as.data.frame(colSums(try != 0)) #you get a list of named, numeric columns of unequal size
+  colnames(try2) <- "Heterozygosity"
+  nrrows <- nrow(try)
+  pop <- breeds$Breed #extract pop vector from file that contains breeds of patients
+  try2$`Heterozygosity`<- as.numeric(try2$`Heterozygosity`) / nrrows
+  try2$Population <- pop
+  try2$Population <- as.factor(try2$Population)
+  try2 <- cbind(ID = rownames(try2), try2)
+  rownames(try2) <- 1:nrow(try2)
+  path <- getwd()
+  add_folder <- "/Diversity_"
+  sample_folder <- paste(add_folder, sample_name, sep = "")
+  new_path <- paste(path, sample_folder, sep = "")
+  dir.create(new_path) #created a new folder with the sample as its name
+  #now go into that folder to store the created raw html files.
+  setwd(new_path)
+  p <- ggplot2::ggplot(try2, ggplot2::aes(y=Heterozygosity, x=Population)) + ggplot2::geom_dotplot(binaxis = 'y', stackdir = 'center')
+  q <- ggplot2::ggplot(try2, ggplot2::aes(y=Heterozygosity, x=Population, label=ID)) + ggplot2::geom_dotplot(binaxis = 'y', stackdir = 'center') + ggrepel::geom_label_repel(size=3, box.padding = ggplot2::unit(0.5, "lines")) + ggplot2::theme_classic()
+  subset_max <- try2 %>% group_by(Population) %>% filter(Heterozygosity == max(Heterozygosity))
+  subset_max <- data.frame(subset_max)
+  subset_max$ID <- as.character(subset_max$ID)
+  try3 <- try2
+  try3$ID <- as.character(try3$ID)
+  try3$name <- ""
+  for(r in 1:nrow(subset_max)){
+    name <- subset_max[r,1]
+    index <- which(try3$ID == name)
+    sample <- try3[index,1]
+    try3[index,4] <- sample
+  }
+  pq <- ggplot2::ggplot(try3, ggplot2::aes(x=Population, y=Heterozygosity, label=name)) + ggrepel::geom_text_repel() + ggplot2::geom_point(color = ifelse(try3$name == "", "grey50", "orange"))
+  try4 <- try2
+  try4$ID <- as.character(try4$ID)
+  try4$name <- ""
+  for (r in 1:nrow(try4)){
+    index <- which(try4$ID == sample_name)
+    sample <- try4[index,1]
+    try4[index,4] <- sample
+  }
+  pqr <- ggplot2::ggplot(try4, ggplot2::aes(x=Population, y=Heterozygosity, label=name)) + ggrepel::geom_text_repel() + ggplot2::geom_point(color = ifelse(try4$name == "", "grey50", "orange"))
+  html <- "_diversity.html"
+  sample_plot <- "Diversity:"
+  html_full <- paste(sample_name, html, sep = "")
+  sample_plot_full <- paste(sample_plot, sample_name, sep = " ")
+  R3port::html_plot(pqr,out= html_full,
+            title= sample_plot_full)
+  R3port::html_plot(pq,out="highlight_plot.html",
+            title="Diversity: highlights")
+  R3port::html_plot(p,out="basic_plot.html",
+            title="Diversity: basic overview")
+  R3port::html_plot(q,out="annotated_plot.html",
+            title="Diversity: fully annotated")
+  R3port::html_list(try2,title="Diversity", out="Diversity_table.html")
+  R3port::html_combine(out="report_variantscanR.html",toctheme=TRUE,
+               template=paste0(system.file(package="R3port"),"/bootstrap.html"))
+  #At the end, so here, we have to go back to the original folder. Otherwise we would get folder inception
+  setwd(path)
+  return(list(try2,p,q,pq,pqr))
+}
+```
+
+```{r, message=FALSE, warning= FALSE}
+data("breeds", package = "variantscanR")
+breeds <- breeds
+pkg <- "variantscanR"
+vcf_file <- system.file("extdata", "SNPs.recode.subset.rename.vcf.gz", package = pkg)
+sample_name <- "sample_9"
+diversity <- diveRsity(vcf_file, breeds, sample_name)
+```
 
 ## Reporting
 As with the _variantfiltR_ function, the not the entire VCF dataset was used in the worked-out example for the _diveRsity_ function. However, the graphs of the real example are displayed below.
@@ -517,32 +979,32 @@ As with the _variantfiltR_ function, the not the entire VCF dataset was used in 
 The first graph gives a basic overview of all the samples included in the multi-sample VCF file. The level of heterozygosity is shown on the y-axis and the x-axis displays the different breeds present.
 
 
-![Figure 8: Basic overview](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity2.jpg)
+![Figure 8: Basic overview](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/D3_sample9.jpg)
 
 
 The second graph reveals the name of every sample.
 
 
-![Figure 9: fully annotated](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity3.jpg)
+![Figure 9: fully annotated](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/D4_sample9.jpg)
 
 
 The third graph only reveals the name of the sample of interest, that was provided as a parameter to the _diveRsity_ function.
 
 
 
-![Figure 10](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity5.jpg)
+![Figure 10](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/D1_sample9.jpg)
 
 
 Lastly, the fourth graph only shows the highest sample of every breed.
 
 
-![Figure 11](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity6.jpg)
+![Figure 11](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/D2_sample9.jpg)
 
 
 Next to the graphs, a table is included in the output of the _diveRstity_ function, containing the heterozygosity values per sample.
 
 
-![Figure 12](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Diversity1.jpg)
+![Figure 12](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/D5_sample9.jpg)
 
 
 # Extra

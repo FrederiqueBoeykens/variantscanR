@@ -22,7 +22,7 @@
 variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
   cicip <- colnames(variants_file)[5]
   if (cicip == "Check"){
-    variants_file <- variants_file[,-c(4:6)]
+    variants_file <- variants_file[,-c(5:6)]
   } else {variants_file <- variants_file}
   filter <- data.frame()
   vcf$pos <- as.numeric(vcf$pos)
@@ -115,7 +115,7 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     nnncol <- ncol(annot)
     x <- annot[r,1] #chromosome
     y <- annot[r,2] #location
-    gene <- annot[r,8] #gene
+    gene <- annot[r,9] #gene
     subset <- BED_file_annot[BED_file_annot$gene == gene,] #we don't use location but gene
     #so when using duplicates it duplicates the amount of times PLUS the original one, so we have to do nrow(subset)-1 but what
     #can we do for the subsets with only 1 row, if you do -1 is becomes 0 and we lose the row and this can not happen.
@@ -127,8 +127,9 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
       nr <- nr-1
       duplicates <- rbind(row, row[rep(1,nr),])
     } else(duplicates <- row)
-    BED <- cbind(duplicates[,1:2], duplicates[,8], duplicates[,3:7], duplicates[,9:10], subset[,5:nncol], duplicates[,11:nnncol])
+    BED <- cbind(duplicates[,1:2], duplicates[,9], duplicates[,3:6], duplicates[,8], duplicates[,10:11], subset[,5:nncol], duplicates[,11:nnncol])
     colnames(BED)[3] <- "Gene"
+    colnames(BED)[8] <- "Inheritance.pattern"
     annot3 <- data.frame(BED)
     annot2 <- rbind(annot2, annot3)
     svMisc::progress(r, nnrow)
@@ -217,6 +218,7 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     finalreport1 <- cbind(Chromosome,Location,Gene,Exon,WildType,Nucleotide1,Nucleotide2,zygosity,RefSeq_transcipt,Inheritance_pattern,Phenotype,breeds)
     finalreport2 <- data.frame(finalreport1)
     finalreport <- rbind(finalreport, finalreport2)
+    svMisc::progress(r, nrrow)
     if ( r == nrrow) message("Waiting for report")
     Sys.sleep(0.01)
   }
@@ -224,10 +226,18 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
   keep <- apply(finalreport[5:7], 1, function(x) length(unique(x[!is.na(x)])) != 1)
   keept <- finalreport[keep, ]
   kept <- as.numeric(rownames(keept))
-  high <- finalreport[kept,]
-  finalreport <- finalreport[-kept,]
-  rownames(high) <- c(1:nrow(high))
-  rownames(finalreport) <- c(1:nrow(finalreport))
+  high <- finalreport[kept,] #the more important rows
+  finalreport <- finalreport[-kept,] #What if there are no homozygous WT? exceptional case, but still
+  if (nrow(high) == 0){
+    high <- high
+  } else{
+    rownames(high) <- c(1:nrow(high)) #Then this step gives problems
+  }
+  if (nrow(finalreport) == 0){
+    finalreport <- finalreport
+  } else{
+    rownames(finalreport) <- c(1:nrow(finalreport))
+  }
   #kept contains the 'name' of the rows that are homozygous variant OR heterozygous, so the more important rows that need to be reported with higher importance
   prefix <- "Sample:"
   sample_result <- paste(prefix, samplename)
@@ -246,9 +256,9 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     emptyrow <- as.data.frame(matrix(empty, ncol = 12, byrow = T))
     colnames(emptyrow) <- coln
     R3port::html_list(high,title="Variants of high importance found within sample",
-              footnote= sample_result,out="variants_maintaineda.html")
+                      footnote= sample_result,out="variants_maintaineda.html")
     R3port::html_list(finalreport,title="Variants present in sample but homozygous Wild Type",
-              footnote= sample_result,out="variants_maintainedb.html")
+                      footnote= sample_result,out="variants_maintainedb.html")
     df1 <- rbind(title0,emptyrow,high,emptyrow,extrarow2,emptyrow,finalreport)
   } else {
     vectori <- numeric(0)
@@ -285,11 +295,11 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
       rownames(high) <- c(1:nrow(high))
     }
     R3port::html_list(highhigh,title="Variants of high importance found within breed of interest",
-              footnote= sample_result,out="variants_maintained1.html")
+                      footnote= sample_result,out="variants_maintained1.html")
     R3port::html_list(high,title="Variants of high importance but not found within breed of interest",
-              footnote= sample_result,out="variants_maintained2.html")
+                      footnote= sample_result,out="variants_maintained2.html")
     R3port::html_list(finalreport,title="Variants present in sample but homozygous Wild Type",
-              footnote= sample_result,out="variants_maintained3.html")
+                      footnote= sample_result,out="variants_maintained3.html")
     #add all 3 dataframes together
     highhigh <- data.frame(lapply(highhigh, as.character), stringsAsFactors=FALSE)
     high <- data.frame(lapply(high, as.character), stringsAsFactors=FALSE)
@@ -297,7 +307,7 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     coln <- colnames(finalreport)
     title0 <- c("Variants", "present", "in", "sample", "and", "found", "in", "breed", "of", "interest", "! ", ":" )
     extrarow0 <- as.data.frame(matrix(title0, ncol = 12, byrow = T))
-    colnames(extrarow1) <- coln
+    colnames(extrarow0) <- coln
     title1 <- c("Variants", "present", "in", "sample", "but", "not", "found", "in", "breed", "of ", "interest ", ":" )
     extrarow1 <- as.data.frame(matrix(title1, ncol = 12, byrow = T))
     colnames(extrarow1) <- coln
@@ -330,8 +340,8 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
   homozygousdf[8,2] <- ":...If male: animal can NOT be used for breeding purposes as every male offspring will inherit the defective Y chromosome..............................."
   homozygousdf[9,2] <- ":...Not able to provide breeding advice because inheritance pattern was not made available...................................................................."
   colnames(homozygousdf) <- c("Inheritance pattern", "Breeding advice")
-  html_list(homozygousdf,title="Zygosity: Homozygous",
-            footnote="***!IMPORTANT SIDE NOTE!: Do NOT use animal if signs or symptoms are already showing!
+  R3port::html_list(homozygousdf,title="Zygosity: Homozygous",
+                    footnote="***!IMPORTANT SIDE NOTE!: Do NOT use animal if signs or symptoms are already showing!
           Animal must be capable of carrying out pregnancy.",out="homozygousIP.html")
   #HETEROZYGOUS DATAFRAME
   heterozygousdf <- data.frame()
@@ -356,6 +366,9 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
   colnames(heterozygousdf) <- c("Inheritance pattern", "Breeding advice")
   R3port::html_list(heterozygousdf,title="Zygosity: Heterozygous",out="heterozygousIP.html")
   R3port::html_combine(out="report_variantscanR.html",toctheme=TRUE,
-               template=paste0(system.file(package="R3port"),"/bootstrap.html"))
+                       template=paste0(system.file(package="R3port"),"/bootstrap.html"))
   return(df1)
 }
+
+
+

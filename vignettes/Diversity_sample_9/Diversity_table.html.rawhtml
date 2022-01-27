@@ -1,0 +1,31 @@
+<h1>Diversity</h1>
+<table class='sample'>
+</tr><td id='lh'> ID </td><td id='lh'> Heterozygosity </td><td id='lh'> Population </td></tr>
+<td> sample_1 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_10 </td><td> 0.461538461538462 </td><td> Labrador retriever </td></tr>
+<td> sample_11 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_12 </td><td> 0.307692307692308 </td><td> Labrador retriever </td></tr>
+<td> sample_13 </td><td> 0.230769230769231 </td><td> Labrador retriever </td></tr>
+<td> sample_14 </td><td> 0.307692307692308 </td><td> Cross breed </td></tr>
+<td> sample_15 </td><td> 0.0769230769230769 </td><td> Cross breed </td></tr>
+<td> sample_16 </td><td> 0.230769230769231 </td><td> Cross breed </td></tr>
+<td> sample_17 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_18 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_19 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_2 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_20 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_21 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_22 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_23 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_24 </td><td> 0 </td><td> Malinois </td></tr>
+<td> sample_25 </td><td> 0.307692307692308 </td><td> Malinois </td></tr>
+<td> sample_26 </td><td> 0.0769230769230769 </td><td> Malinois </td></tr>
+<td> sample_27 </td><td> 0.0769230769230769 </td><td> Malinois </td></tr>
+<td> sample_3 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_4 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_5 </td><td> 0.384615384615385 </td><td> Labrador retriever </td></tr>
+<td> sample_6 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_7 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_8 </td><td> 0.307692307692308 </td><td> Labrador retriever </td></tr>
+<td> sample_9 </td><td> 0.230769230769231 </td><td> Labrador retriever </td></tr>
+</table>
