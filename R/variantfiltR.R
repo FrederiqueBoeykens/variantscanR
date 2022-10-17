@@ -51,6 +51,7 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     ex <- which(format == "GT")  #depending on where GT is in the format string,
     snp <- unlist(strsplit(as.character(row[,6]), ":")) #snp in sample_file column
     snp <- snp[ex] #we choose the same number where GT was located
+    snp <- gsub("\\|", "/", snp)
     snp_sep <- unlist(strsplit(snp, "/"))
     snp1 <- snp_sep[1] #homozyg 0/0 or 1/1 and heterozyg 0/1 or 1/0 so therefore as.numeric because
     #until now chr
@@ -160,14 +161,14 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     exonstarts <- unlist(strsplit(as.character(annot2[r,18]), ","))
     exonstarts <- as.numeric(exonstarts)
     exonstarts <- exonstarts # DO NOT ADD 1 - otherwise in the end, you have added 2, the 'starts' depend on the original value 'a'
-    exonstarts <- sapply(exonstarts, "+", a)
+    exonstarts <- vapply(exonstarts, "+", a)
     exonlengths <- unlist(strsplit(as.character(annot2[r,17]), ","))
     exonlengths <- as.numeric(exonlengths)
     #if exonlengths is length 1 --> diagonal function will behave badly, so we have to 'if' for this special case.
     if (length(exonlengths) == 1){
       exonlengths <- exonstarts + exonlengths
     } else{
-      exonlengths <- sapply(exonlengths, "+", exonstarts)
+      exonlengths <- vapply(exonlengths, "+", exonstarts)
       exonlengths
       exonlengths <- diag(x=exonlengths)
       exonlengths
