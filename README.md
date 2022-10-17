@@ -1,13 +1,9 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-<img src='man/figures/logo.png' align="right" height="139" />
-
 # variantscanR
 
 <!-- badges: start -->
-
-
 
 <!-- badges: end -->
 
@@ -15,24 +11,7 @@ The goal of variantscanR is to serve as a clinical bioinformatics tool
 to standardize and facilitate the analysis of next generation sequencing
 data in veterinary medicine for diagnostic purposes.
 
-## :writing_hand: Author
-
-Fréderique Boeykens 
-
-Laboratory of Animal Genetics
-
-Department of Veterinary and Biosciences
-
-Faculty of Veterinary Medicine
-
-Ghent University
-
-
-The goal of variantscanR is to serve as a clinical bioinformatics tool
-to standardize and facilitate the analysis of next generation sequencing
-data in veterinary medicine for diagnostic purposes.
-
-## :arrow_double_down: Installation
+## Installation
 
 You can install the released version of variantscanR from
 [CRAN](https://CRAN.R-project.org) with:
