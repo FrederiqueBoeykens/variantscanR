@@ -12,7 +12,8 @@ Description: The R-package variantscanR enables the filtering of variant call fo
 License: GPL-3
 URL: https://github.com/FrederiqueBoeykens /variantscanR
 Encoding: UTF-8
-LazyData: true
+LazyData: True
+LazyDataCompression: bzip2
 RoxygenNote: 7.1.2
 Imports: 
     vcfR,
@@ -28,7 +29,9 @@ Imports:
 Suggests: 
     rmarkdown,
     knitr,
-    synbreed
+    BSgenome,
+    BSgenome.Cfamiliaris.UCSC.canFam3,
+    tibble
 VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
