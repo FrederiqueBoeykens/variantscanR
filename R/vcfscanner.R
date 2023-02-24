@@ -10,7 +10,10 @@
 #' @importFrom dplyr "%>%"
 #'
 #'@examples
-#'\donttest{}
+#'vcf_file <- system.file("extdata", "SNPs.recode.subset.rename.vcf.gz")
+#'\dontrun{
+#'vcf <- vcfscanneR(vcf_file, "sample_9")
+#'}
 
 
 vcfscanneR <- function(x, sample){

@@ -40,7 +40,7 @@ A visual representation of the workflow is given below.
 To explain the workflow of this package, an example will be used and elaborated in this vignette.
 Disclaimer: Not the entire VCF dataset is used for as this is a very large file.
 
-![variantscanR workflow](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/workflow.png)
+![variantscanR workflow](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/figure_workflow.png)
 
 
 **Example: Labrador retriever**
@@ -611,14 +611,14 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     exonstarts <- unlist(strsplit(as.character(annot2[r,18]), ","))
     exonstarts <- as.numeric(exonstarts)
     exonstarts <- exonstarts # DO NOT ADD 1 - otherwise in the end, you have added 2, the 'starts' depend on the original value 'a'
-    exonstarts <- sapply(exonstarts, "+", a)
+    exonstarts <- vapply(exonstarts, "+", a)
     exonlengths <- unlist(strsplit(as.character(annot2[r,17]), ","))
     exonlengths <- as.numeric(exonlengths)
     #if exonlengths is length 1 --> diagonal function will behave badly, so we have to 'if' for this special case.
     if (length(exonlengths) == 1){
       exonlengths <- exonstarts + exonlengths
     } else{
-      exonlengths <- sapply(exonlengths, "+", exonstarts)
+      exonlengths <- vapply(exonlengths, "+", exonstarts)
       exonlengths
       exonlengths <- diag(x=exonlengths)
       exonlengths

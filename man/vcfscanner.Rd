@@ -18,5 +18,8 @@ Returns a single sample vcf file ready for downstream analysis.
 Uploads a single sample VCF file (from a multi sample VCF file) into R.
 }
 \examples{
-\donttest{}
+vcf_file <- system.file("extdata", "SNPs.recode.subset.rename.vcf.gz")
+\dontrun{
+vcf <- vcfscanneR(vcf_file, "sample_9")
+}
 }

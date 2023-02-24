@@ -1,7 +1,3 @@
-
-# a is ensembl BED file with the ENSCAFT names
-# b is the ensemblToGeneName file with the alternate gene names
-
 #' @title annotateR_ensembl
 #' @description Changes the gene names of an ensembl BED file.
 #'

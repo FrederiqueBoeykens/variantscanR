@@ -62,7 +62,7 @@ pRocess <- function(variants_file, BED_file, refseq, QC = TRUE, organism = NULL,
     }
     final <- data.frame()
     for (r in 1:nrow(between)){
-      output = NULL
+      output <- NULL
       row <- between[r,]
       nrc <- ncol(between)
       id <- between[r,2]
