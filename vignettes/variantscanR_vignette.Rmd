@@ -11,12 +11,7 @@ vignette: >
 
 # Introduction
 
-One of the main goals in the genetics field is the identification of genetic variation accountable for a
-certain phenotype. This goal has been facilitated for several years by the introduction of next-generation
-sequencing technologies. At present time, most of the tools available for the evaluation of whole-genome
-or exome sequencing (WGS and WES, respectively) data are solely applicable for human analysis. For this
-reason, we developed _variantscanR_, an _R-package_, for the easy and straightforward identification of known
-disease-causing variants from a large collection of variants present in dogs and other animals.
+Since the introduction of next-generation sequencing (NGS) techniques, whole-exome sequencing (WES) and whole-genome sequencing (WGS) not only revolutionized research, but also diagnostics. At present time, most of the tools available for the evaluation of NGS data are solely applicable for human analysis. On top of this, Veterinary Medicine also faces the additional problem that genetic diversity can be dangerously low, especially in the dog. For this reason, we developed _variantscanR_, an _R-package_, for the easy and straightforward identification of known disease-causing variants from a large collection of variants present in dogs and other animals.
 
 The R-package variantscanR enables the filtering of variant call format (VCF file) files for the presence
 of known disease-causing variants. In addition to the main variant-filtering function, the package allows
@@ -26,8 +21,8 @@ screening. Finally, next to the filtering of known disease-causing variants, an 
 optional to gather the remaining variants located within the genes of interest. 
 
 VariantscanR is an R package, designed for the use as a clinical tool for variant filtering of known
-disease-causing mutations in domestic animals. The package focuses on cats and dogs but can be used for
-every animal if the required data and information for this animal is present. 
+disease-causing variants in domestic animals. The package focuses on cats and dogs but can be used for
+other animals if the required data and information for this animal is present. 
 
 This vignette is divided into four parts:
 
@@ -40,7 +35,7 @@ A visual representation of the workflow is given below.
 To explain the workflow of this package, an example will be used and elaborated in this vignette.
 Disclaimer: Not the entire VCF dataset is used for as this is a very large file.
 
-![variantscanR workflow](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/figure_workflow.png)
+![variantscanR workflow](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Figure1.png)
 
 
 **Example: Labrador retriever**
@@ -53,9 +48,7 @@ a yellow, female Labrador retriever.
 
 # Preprocessing
 For the filtering of variants, the pipeline needs a least 3 different input file. The first one being the
-file containing the variants of interest. Secondly, the VCF file to which the variants of interest need to
-be filtered is required and thirdly, a BED file for the annotation of found variants is needed throughout
-the worflow. These 3 files require a certain format, which is explained in the following sections.
+file containing the variants of interest. Secondly, the VCF file to which the variants of interest are filtered against and thirdly, a BED file for the annotation of variants is needed throughout the worflow. These 3 files require a certain format, which is explained in the following sections.
 
 ## Input files
 ### (1) VCF file
@@ -67,10 +60,10 @@ VCF stands for 'Variant Call Format' and is a standardized text file format used
 
 The first 9 columns of the header line and the variant call record line give information on the variants found.
 
-The VCF file already has a certain fixed format and don't need adjusting. In fact, **never edit** a VCF in a word processor by hand, because it **will** screw up the format! 
+The VCF file already has a certain fixed format and doesn't need adjusting. In fact, please **never edit** a VCF in a word processor by hand, because it **will** screw up the format! 
 
-### (2) Variants file
-The variants file contains the known disease-causing variants you are interested in. This file does need a certain format so it can be used in downstream analysis. 
+### (2) Variants Of Interest file (VOI file)
+The VOI file contains the known disease-causing variants you are interested in. This file does need a certain format so it can be used in downstream analysis. 
 Following columns need to be specified:
 
 * __Chromosome__
@@ -89,7 +82,7 @@ However, the function also allows another 'specific' format that can be download
 The file can be downloaded from [here](https://www.omia.org/home/). For example, if you want to download the known-disease causing variants of the dog, a CSV document can be obtained from [here](https://www.omia.org/results/?gb_species_id=9615&search_type=advanced&result_type=variant) at the bottom __'Download table as CSV'__.
 When the CSV file is converted into an Excel table, you will notice that the _Start_, _End_ and _Reference sequence_ columns are replaced by a _'g. or m.'_ column. The package allows this format. However, in the _pRocess_ function (explained below), the OMIA parameter has to be set to TRUE (default = FALSE). 
 
-### (3) BED file
+### (3) Annotation file
 A BED (Browser Extensible Data) file is needed for annotation along the way. A BED file had a fixed format, including 3 required fields:
 
 * chrom
@@ -453,9 +446,7 @@ head(variant_file_processed)
 
 This test shows the result of a variants file processed by the pRocess function but without the quality control (QC = FALSE). No _check_ or _orientation_ columns are provided and no warnings are given concerning the location of the variants. This way of processing might come in handy if it is preferred to run the pipeline without using the _BSgenome reference genomes_. If QC = FALSE, the _organism_ parameter can be left out. 
 
-#### test 3: No refseq given; OMIA = TRUE and QC = TRUE
-
-#### test 4: Other format provided, OMIA = FALSE, QC = TRUE
+#### test 3: Other format provided, OMIA = FALSE, QC = TRUE
 ```{r}
 data("variants_file_alternative", package = "variantscanR")
 variants_file <- variants_file_alternative
@@ -833,7 +824,7 @@ head(report)
 ```
 
 The output of this function is difficult to show because raw .html files are created that will pop up in your internet browser. This head of the report is shown here, but it is not very appealing. 
-For this reason, pictures of the output are provided in the following section.
+For this reason, images of the output are provided in the following section.
 
 
 ## Reporting
@@ -872,13 +863,12 @@ Lastly, the third table contain the variants found or not found within the breed
 
 
 # Diversity
-The _variantscanR_ package also features a diversity analysis. Although this is not an in-depth method to study diversity, it does offer many possibilities. 
-
+The _variantscanR_ package also features a diversity analysis. 
 
 ## diveRsity
 The input is a multisample VCF file and the name of one specific sample the user is interested in. 
 Most of the output of the _diveRsity_ function are graphs, however, also a table with the actual diversity values is given. 
-The level of heterozygosity is calculated as followed:
+The measure used to quantify diversity is the average heterozygosity, which is calculated as follows:
 
 
 $H_{e} = \displaystyle \frac{n_{He}}{n_{n}}$
@@ -976,7 +966,7 @@ diversity <- diveRsity(vcf_file, breeds, sample_name)
 ## Reporting
 As with the _variantfiltR_ function, the not the entire VCF dataset was used in the worked-out example for the _diveRsity_ function. However, the graphs of the real example are displayed below.
 
-The first graph gives a basic overview of all the samples included in the multi-sample VCF file. The level of heterozygosity is shown on the y-axis and the x-axis displays the different breeds present.
+The first graph gives a basic overview of all the samples included in the multi-sample VCF file. The level of heterozygosity is shown on the y-axis and the x-axis displays the different breed populations.
 
 
 ![Figure 8: Basic overview](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/D3_sample9.jpg)
@@ -1007,13 +997,89 @@ Next to the graphs, a table is included in the output of the _diveRstity_ functi
 ![Figure 12](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/D5_sample9.jpg)
 
 
-# Extra
+# extrafiltR
+When there is genetic heterogeneity, the variant responsible for a certain phenotype might not be known and as such are not present in the VOI file. The disease-associated variant might however occur in genes known to be associated with the phenotype. The optional extrafiltR function collects all other variants present in the genes that contain the variants of interest as this might be valuable input in these cases. A dataframe is rendered in the R environment. This dataframe can be searched by the user to identify potentially interesting variants. 
 
-
-
-
-
-
+```{r, echo=FALSE}
+extrafiltR <- function(vcf, variants_file, BED_file_annot){
+  cicip <- colnames(variants_file)[5]
+  if (cicip == "Check"){
+    variants_file <- variants_file[,-c(4:6)]
+  } else {variants_file <- variants_file}
+  filter <- data.frame()
+  vcf$pos <- as.numeric(vcf$pos)
+  variants_file$Start <- as.numeric(variants_file$Start)
+  df <- data.frame()
+  for (r in 1:nrow(variants_file)){ #for every row in the OMIA_file
+    nrrow <- nrow(variants_file)
+    x <- variants_file[r,1] #get the chromosome we're looking at  str(chr)
+    gene <- variants_file[r,6] #get the gene within the chromosome  str(num)
+    subsetgene <- BED_file_annot[BED_file_annot[,4] == gene,] #subset on only this gene
+    # Check if the generated dataframe is empty
+    if (nrow(subsetgene) == 0){
+      # If it is, break out of the loop and move on to the next row
+      next
+    }
+    a <- as.numeric(min(subsetgene[,2]))
+    b <- as.numeric(max(subsetgene[,3]))
+    subsetvcffile <- vcf[vcf$chrom == x,] #subset on only this chromosome
+    subsetvcffile <- subsetvcffile[subsetvcffile$pos > a,]
+    subsetvcffile <- subsetvcffile[subsetvcffile$pos > b,]
+    filter <- unique(subsetvcffile)
+    output1 <- data.frame()
+    filter <- filter[,-3]
+    filter <- filter[,-5]
+    filter <- filter[,-6]
+    samplename <- names(filter)[7]
+    # Define a function that takes a row and outputs the desired columns
+    convert_row <- function(row) {
+      format <- unlist(strsplit(as.character(row[6]), ":"))
+      ex <- which(format == "GT")
+      snp <- unlist(strsplit(as.character(row[7]), ":"))
+      snp <- snp[ex]
+      snp <- gsub("\\|", "/", snp)
+      snp_sep <- unlist(strsplit(snp, "/"))
+      snp1 <- snp_sep[1]
+      snp2 <- snp_sep[2]
+      if (snp1 == "." ){snp1 <- "A call cannot be made for this sample at this given locus"} else {
+        snp1 <- as.numeric(snp1)
+      }
+      if (snp2 == "." ){snp2 <- "A call cannot be made for this sample at this given locus"} else {
+        snp2 <- as.numeric(snp2)
+      }
+      zygosity <- if(snp1 == "A call cannot be made for this sample at this given locus" | snp2 == "A call cannot be made for this sample at this given locus" ) {"Zygosity could not be determined"} else if (snp1 == snp2){
+        "Homozygous"} else {"Heterozygous"}
+      allele_alt <- unlist(strsplit(as.character(row[4]), ","))
+      if (is.numeric(snp1) == FALSE){allele1 <- snp1} else if(snp1 == 0){allele1 <- row[3]} else {allele1 <- allele_alt[snp1]}
+      if (is.numeric(snp2) == FALSE){allele2 <- snp2} else if(snp2 == 0){allele2 <- row[3]} else {allele2 <- allele_alt[snp2]}
+      output <- c(row[1:3], allele1, allele2, zygosity)
+      return(output)
+    }
+    # Use apply() to apply the function to each row of filter
+    output_list <- apply(filter, 1, convert_row)
+    output_df <- as.data.frame(output_list)
+    output_df <- t(output_df)
+    output_df <- as.data.frame(output_df)
+    colnames(output_df) <- c("Chromosome", "Location", "Wild_type", "First_allele", "Second_allele", "Zygosity")
+    rownames(output_df) <- NULL
+    result <- unique(output_df)
+    result[] <- lapply(result, as.character)
+    result$Location <- as.numeric(result$Location)
+    rownames(result) <- NULL
+    whatif <- result %>%
+      filter(if_any(First_allele:Second_allele, ~ .x != Wild_type))
+    nrrows <- nrow(whatif)
+    generep <- as.data.frame(rep(c(gene), times = nrrows))
+    colnames(generep) <- "gene"
+    total <- cbind(whatif[,1], generep, whatif[,2:ncol(whatif)])
+    df <- rbind.data.frame(df, total)
+    progress(r, nrrow)
+    if ( r == nrrow) message("Filtering step 1 done...but it's not done yet! Next up: step 2 ")
+    Sys.sleep(0.01)
+  }
+  return(df)
+}
+```
 
 
 
