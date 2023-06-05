@@ -494,8 +494,8 @@ library(tibble)
 
 #### Test 1 pRocess parameters: Quality control: yes, OMIA = TRUE and QC = TRUE
 ```{r}
-data("omia_raw", package = "variantscanR")
-variants_file <- omia_raw
+data("omia_VOI", package = "variantscanR")
+variants_file <- omia_VOI
 BED_file <- BED_file_fully_annotated
 refseq <- "CanFam3.1"
 organism <- BSgenome.Cfamiliaris.UCSC.canFam3
@@ -509,8 +509,8 @@ For the 5th variant, no reference was given and therefore, that row needs revisi
 
 #### test 2 pRocess paramaters: Quality control: No, OMIA = TRUE and QC = FALSE
 ```{r}
-data("variants_file_OMIA_dog", package = "variantscanR")
-variants_file <- variants_file_OMIA_dog
+data("omia_VOI", package = "variantscanR")
+variants_file <- omia_VOI
 BED_file <- BED_file_fully_annotated
 refseq <- "CanFam3.1"
 organism <- BSgenome.Cfamiliaris.UCSC.canFam3
@@ -556,6 +556,9 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     Sys.sleep(0.01)
   }
   filter <- unique(filter)
+  if (nrow(filter) == 0) { #changed after the reviewing process
+    stop("It appears that none of the variants of interest are present in the provided VCF file.")
+  }
   output1 <- data.frame()
   filter <- filter[,-3]
   filter <- filter[,-5:-7]
@@ -567,6 +570,7 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     ex <- which(format == "GT")  #depending on where GT is in the format string,
     snp <- unlist(strsplit(as.character(row[,6]), ":")) #snp in sample_file column
     snp <- snp[ex] #we choose the same number where GT was located
+    snp <- gsub("\\|", "/", snp)
     snp_sep <- unlist(strsplit(snp, "/"))
     snp1 <- snp_sep[1] #homozyg 0/0 or 1/1 and heterozyg 0/1 or 1/0 so therefore as.numeric because
     #until now chr
@@ -679,21 +683,7 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     exonstarts <- vapply(exonstarts, "+", a)
     exonlengths <- unlist(strsplit(as.character(annot2[r,17]), ","))
     exonlengths <- as.numeric(exonlengths)
-    #if exonlengths is length 1 --> diagonal function will behave badly, so we have to 'if' for this special case.
-    if (length(exonlengths) == 1){
-      exonlengths <- exonstarts + exonlengths
-    } else{
-      exonlengths <- vapply(exonlengths, "+", exonstarts)
-      exonlengths
-      exonlengths <- diag(x=exonlengths)
-      exonlengths
-      exonstarts <- t(exonstarts)
-      exonlengths <- t(exonlengths)
-      exonstarts <- t(exonstarts)
-      exonstarts
-      exonlengths <- t(exonlengths)
-      exonlengths
-    }
+    exonlengths <- exonstarts + exonlengths
     dfpos <- cbind(exonstarts, exonlengths)
     dfpos <- data.frame(dfpos)
     colnames(dfpos)[1] <- "start"
@@ -807,8 +797,8 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     } else {
       highhigh <- high[vectori,]
       high <- high[-vectori,]
-      rownames(highhigh) <- c(1:nrow(highhigh))
-      rownames(high) <- c(1:nrow(high))
+      rownames(highhigh) <- NULL #changed after reviewing process
+      rownames(high) <- NULL #changed after reviewin process.
     }
     R3port::html_list(highhigh,title="Variants of high importance found within breed of interest",
                       footnote= sample_result,out="variants_maintained1.html")
@@ -1080,10 +1070,10 @@ extrafiltR <- function(vcf, variants_file, BED_file_annot){
   if (cicip == "Check"){
     variants_file <- variants_file[,-c(4:6)]
   } else {variants_file <- variants_file}
-  filter <- data.frame()
   vcf$pos <- as.numeric(vcf$pos)
   variants_file$Start <- as.numeric(variants_file$Start)
   df <- data.frame()
+  filter_list <- list() #Create an empty list to store the non-empty filter dataframes
   for (r in 1:nrow(variants_file)){ #for every row in the OMIA_file
     nrrow <- nrow(variants_file)
     x <- variants_file[r,1] #get the chromosome we're looking at  str(chr)
@@ -1105,56 +1095,68 @@ extrafiltR <- function(vcf, variants_file, BED_file_annot){
     filter <- filter[,-5]
     filter <- filter[,-6]
     samplename <- names(filter)[7]
-    # Define a function that takes a row and outputs the desired columns
-    convert_row <- function(row) {
-      format <- unlist(strsplit(as.character(row[6]), ":"))
-      ex <- which(format == "GT")
-      snp <- unlist(strsplit(as.character(row[7]), ":"))
-      snp <- snp[ex]
-      snp <- gsub("\\|", "/", snp)
-      snp_sep <- unlist(strsplit(snp, "/"))
-      snp1 <- snp_sep[1]
-      snp2 <- snp_sep[2]
-      if (snp1 == "." ){snp1 <- "A call cannot be made for this sample at this given locus"} else {
-        snp1 <- as.numeric(snp1)
-      }
-      if (snp2 == "." ){snp2 <- "A call cannot be made for this sample at this given locus"} else {
-        snp2 <- as.numeric(snp2)
-      }
-      zygosity <- if(snp1 == "A call cannot be made for this sample at this given locus" | snp2 == "A call cannot be made for this sample at this given locus" ) {"Zygosity could not be determined"} else if (snp1 == snp2){
-        "Homozygous"} else {"Heterozygous"}
-      allele_alt <- unlist(strsplit(as.character(row[4]), ","))
-      if (is.numeric(snp1) == FALSE){allele1 <- snp1} else if(snp1 == 0){allele1 <- row[3]} else {allele1 <- allele_alt[snp1]}
-      if (is.numeric(snp2) == FALSE){allele2 <- snp2} else if(snp2 == 0){allele2 <- row[3]} else {allele2 <- allele_alt[snp2]}
-      output <- c(row[1:3], allele1, allele2, zygosity)
-      return(output)
+    if (nrow(filter) > 0){
+      filter_list[[r]] <- filter #Store the non-empty filter dataframe in the list
     }
-    # Use apply() to apply the function to each row of filter
-    output_list <- apply(filter, 1, convert_row)
-    output_df <- as.data.frame(output_list)
-    output_df <- t(output_df)
-    output_df <- as.data.frame(output_df)
-    colnames(output_df) <- c("Chromosome", "Location", "Wild_type", "First_allele", "Second_allele", "Zygosity")
-    rownames(output_df) <- NULL
-    result <- unique(output_df)
-    result[] <- lapply(result, as.character)
-    result$Location <- as.numeric(result$Location)
-    rownames(result) <- NULL
-    whatif <- result %>%
-      filter(if_any(First_allele:Second_allele, ~ .x != Wild_type))
-    nrrows <- nrow(whatif)
-    generep <- as.data.frame(rep(c(gene), times = nrrows))
-    colnames(generep) <- "gene"
-    total <- cbind(whatif[,1], generep, whatif[,2:ncol(whatif)])
-    df <- rbind.data.frame(df, total)
-    progress(r, nrrow)
-    if ( r == nrrow) message("Filtering step 1 done...but it's not done yet! Next up: step 2 ")
-    Sys.sleep(0.01)
   }
+  filter_all <- do.call(rbind, filter_list)
+  filter_all <- unique(filter_all)
+  convert_row <- function(row) {
+    format <- unlist(strsplit(as.character(row[6]), ":"))
+    ex <- which(format == "GT")
+    snp <- unlist(strsplit(as.character(row[7]), ":"))
+    snp <- snp[ex]
+    snp <- gsub("\\|", "/", snp)
+    snp_sep <- unlist(strsplit(snp, "/"))
+    snp1 <- snp_sep[1]
+    snp2 <- snp_sep[2]
+    if (snp1 == "." ){snp1 <- "A call cannot be made for this sample at this given locus"} else {
+      snp1 <- as.numeric(snp1)
+    }
+    if (snp2 == "." ){snp2 <- "A call cannot be made for this sample at this given locus"} else {
+      snp2 <- as.numeric(snp2)
+    }
+    zygosity <- if(snp1 == "A call cannot be made for this sample at this given locus" | snp2 == "A call cannot be made for this sample at this given locus" ) {"Zygosity could not be determined"} else if (snp1 == snp2){
+      "Homozygous"} else {"Heterozygous"}
+    allele_alt <- unlist(strsplit(as.character(row[4]), ","))
+    if (is.numeric(snp1) == FALSE){allele1 <- snp1} else if(snp1 == 0){allele1 <- row[3]} else {allele1 <- allele_alt[snp1]}
+    if (is.numeric(snp2) == FALSE){allele2 <- snp2} else if(snp2 == 0){allele2 <- row[3]} else {allele2 <- allele_alt[snp2]}
+    output <- c(row[1:3], allele1, allele2, zygosity)
+    return(output)
+  }# Use apply() to apply the function to each row of filter
+  output_list <- apply(filter_all, 1, convert_row)
+  output_df <- as.data.frame(output_list)
+  output_df <- t(output_df)
+  output_df <- as.data.frame(output_df)
+  colnames(output_df) <- c("Chromosome", "Location", "Wild_type", "First_allele", "Second_allele", "Zygosity")
+  rownames(output_df) <- NULL
+  result <- unique(output_df)
+  result[] <- lapply(result, as.character)
+  result$Location <- as.numeric(result$Location)
+  rownames(result) <- NULL
+  whatif <- result %>%
+    filter(if_any(First_allele:Second_allele, ~ .x != Wild_type))
+  nrrows <- nrow(whatif)
+  generep <- as.data.frame(rep(c(gene), times = nrrows))
+  colnames(generep) <- "gene"
+  total <- cbind(whatif[,1], generep, whatif[,2:ncol(whatif)])
+  df <- rbind.data.frame(df, total)
+  colnames(df) <- c("Chromosome", "gene", "Location", "Wild_type", "First_allele", "Second_allele", "Zygosity")
+  progress(r, nrrow)
+  if ( r == nrrow) message("Filtering step 1 done...but it's not done yet! Next up: step 2 ")
+  Sys.sleep(0.01)
   return(df)
 }
 ```
 
 
-
+```{r, message= FALSE}
+require(stringr)
+require(svMisc)
+vcf <- vcf_chr
+variants_file <- variant_file_processed_1
+BED_file_annot <- BED_file_fully_annotated
+extra <- extrafiltR(vcf, variants_file, BED_file_annot)
+head(extra)
+```
 
