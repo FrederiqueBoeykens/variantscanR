@@ -23,6 +23,13 @@
 
 pRocess <- function(variants_file, BED_file, refseq, QC = TRUE, organism = NULL, OMIA = FALSE){
   if (OMIA == TRUE){
+    nr <- nrow(variants_file)
+    IP <- as.character(rep(NA, nr))
+    IP <- as.data.frame(IP)
+    try <- cbind(variants_file[,12], variants_file[,13], variants_file[,11], IP, variants_file[,6], variants_file[,5], variants_file[,4])
+    namess <- c("Chr.", "g. or m.", "Reference Sequence", "Inheritance pattern", "Gene", "Variant Phenotype", "Breed")
+    colnames(try) <- namess
+    variants_file <- try
     variants_file <- variants_file[stats::complete.cases(variants_file[1]), ]
     colnames(variants_file)[1] <- "Chr."
     variants_file <- variants_file[stats::complete.cases(variants_file[2]), ]
@@ -115,11 +122,19 @@ pRocess <- function(variants_file, BED_file, refseq, QC = TRUE, organism = NULL,
     random1 <- data.frame()
     for (r in 1:nrow(final)){
       row <- final[r,]
+      gene <- row$Gene
+      chrom <- row$Chromosome
+      pheno <- row$Variant.Phenotype
       nrcc <- ncol(final)
       a <- final[r,1]
       b <- as.numeric(final[r,2])
       c <- as.numeric(final[r,3])
       c[is.na(c)] <- b
+      if (!is.na(c) && c < b) {
+        stop(paste("Please check the location of the variant with the following information: gene:",gene,", chromosome:", chrom,", phenotype:"
+                   ,pheno,
+                   "The supplied start/end leads to a negative width."))
+      }
       Check <- Biostrings::getSeq(organism, a, start = b, end = c)
       Check <- as.character(Check)
       random <- cbind(row[,1:4], Check, row[,5:nrcc], row.names = NULL)

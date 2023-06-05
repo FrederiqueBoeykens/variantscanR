@@ -40,6 +40,9 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     Sys.sleep(0.01)
   }
   filter <- unique(filter)
+  if (nrow(filter) == 0) { #changed after the reviewing process
+    stop("It appears that none of the variants of interest are present in the provided VCF file.")
+  }
   output1 <- data.frame()
   filter <- filter[,-3]
   filter <- filter[,-5:-7]
@@ -164,21 +167,7 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     exonstarts <- vapply(exonstarts, "+", a)
     exonlengths <- unlist(strsplit(as.character(annot2[r,17]), ","))
     exonlengths <- as.numeric(exonlengths)
-    #if exonlengths is length 1 --> diagonal function will behave badly, so we have to 'if' for this special case.
-    if (length(exonlengths) == 1){
-      exonlengths <- exonstarts + exonlengths
-    } else{
-      exonlengths <- vapply(exonlengths, "+", exonstarts)
-      exonlengths
-      exonlengths <- diag(x=exonlengths)
-      exonlengths
-      exonstarts <- t(exonstarts)
-      exonlengths <- t(exonlengths)
-      exonstarts <- t(exonstarts)
-      exonstarts
-      exonlengths <- t(exonlengths)
-      exonlengths
-    }
+    exonlengths <- exonstarts + exonlengths
     dfpos <- cbind(exonstarts, exonlengths)
     dfpos <- data.frame(dfpos)
     colnames(dfpos)[1] <- "start"
@@ -292,8 +281,8 @@ variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
     } else {
       highhigh <- high[vectori,]
       high <- high[-vectori,]
-      rownames(highhigh) <- c(1:nrow(highhigh))
-      rownames(high) <- c(1:nrow(high))
+      rownames(highhigh) <- NULL #changed after reviewing process
+      rownames(high) <- NULL #changed after reviewin process.
     }
     R3port::html_list(highhigh,title="Variants of high importance found within breed of interest",
                       footnote= sample_result,out="variants_maintained1.html")

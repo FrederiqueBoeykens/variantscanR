@@ -1,0 +1,93 @@
+<!-- Take into account that Rout always returns information for css and rrres tags -->
+<!-- In case the rr_hcombine function is used with argument toctheme=TRUE also information for rrtoc is returned-->
+<!DOCTYPE html>
+<html>
+<title> report</title>
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css'>
+  <link rel='stylesheet' href='style.css' type='text/css'>
+  <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js'></script>
+  <script>
+  $(document).ready(function(){
+    $('.showhide').hide();
+    $('a').click(function(){
+      $('.showhide').hide();
+      $('#'+$(this).attr('id')+'d').show();
+    });
+  });
+  </script>
+</head>
+<body>
+  <h2 class='text-center'> report </small></h2><hr>
+  <div class='container-fluid'>
+    <div class='row'>
+      <div class='col-md-3'>
+        <ul class='nav nav-pills nav-stacked'>
+          <li ><a id='out1' href='#'>  Diversity: fully annotated </a></li><li ><a id='out2' href='#'>  Diversity: basic overview </a></li><li ><a id='out3' href='#'>Diversity</a></li><li ><a id='out4' href='#'>  Diversity: highlights </a></li><li ><a id='out5' href='#'>  Diversity: sample_9 </a></li>
+        </ul>
+      </div>
+      <div class='col-md-9'>
+        <div id='out1d' class='showhide'>
+<h1>  Diversity: fully annotated </h1>
+<img src='./figures/annotated_plot001.png' alt='Oops something went wrong, check your code' class='img-resp'>
+<br/>
+
+</div>
+<div id='out2d' class='showhide'>
+<h1>  Diversity: basic overview </h1>
+<img src='./figures/basic_plot001.png' alt='Oops something went wrong, check your code' class='img-resp'>
+<br/>
+
+</div>
+<div id='out3d' class='showhide'>
+<h1>Diversity</h1>
+<table class='sample'>
+</tr><td id='lh'> ID </td><td id='lh'> Heterozygosity </td><td id='lh'> Population </td></tr>
+<td> sample_1 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_10 </td><td> 0.461538461538462 </td><td> Labrador retriever </td></tr>
+<td> sample_11 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_12 </td><td> 0.307692307692308 </td><td> Labrador retriever </td></tr>
+<td> sample_13 </td><td> 0.230769230769231 </td><td> Labrador retriever </td></tr>
+<td> sample_14 </td><td> 0.307692307692308 </td><td> Cross breed </td></tr>
+<td> sample_15 </td><td> 0.0769230769230769 </td><td> Cross breed </td></tr>
+<td> sample_16 </td><td> 0.230769230769231 </td><td> Cross breed </td></tr>
+<td> sample_17 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_18 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_19 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_2 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_20 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_21 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_22 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_23 </td><td> 0 </td><td> Deerhound </td></tr>
+<td> sample_24 </td><td> 0 </td><td> Malinois </td></tr>
+<td> sample_25 </td><td> 0.307692307692308 </td><td> Malinois </td></tr>
+<td> sample_26 </td><td> 0.0769230769230769 </td><td> Malinois </td></tr>
+<td> sample_27 </td><td> 0.0769230769230769 </td><td> Malinois </td></tr>
+<td> sample_3 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_4 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_5 </td><td> 0.384615384615385 </td><td> Labrador retriever </td></tr>
+<td> sample_6 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_7 </td><td> 0 </td><td> Labrador retriever </td></tr>
+<td> sample_8 </td><td> 0.307692307692308 </td><td> Labrador retriever </td></tr>
+<td> sample_9 </td><td> 0.230769230769231 </td><td> Labrador retriever </td></tr>
+</table>
+</div>
+<div id='out4d' class='showhide'>
+<h1>  Diversity: highlights </h1>
+<img src='./figures/highlight_plot001.png' alt='Oops something went wrong, check your code' class='img-resp'>
+<br/>
+
+</div>
+<div id='out5d' class='showhide'>
+<h1>  Diversity: sample_9 </h1>
+<img src='./figures/sample_9_diversity001.png' alt='Oops something went wrong, check your code' class='img-resp'>
+<br/>
+
+</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
