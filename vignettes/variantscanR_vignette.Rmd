@@ -8,6 +8,59 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+# Generic information
+
+Package: variantscanR
+
+Type: Package
+
+Title: Clinical Bioinformatics Tool for Variant Filtering of Known Disease-Causing Mutations in Domestic Animals
+
+Version: 0.0.1
+Authors@R: c(person("Fréderique", "Boeykens", email = c("frederique.boeykens@ugent.be", "frederique.boeykens@gmail.com"), role = c("cre", "aut")),person("Bart", "Broeckx", email = "bart.broeckx@ugent.be", role = "aut"))
+Maintainer: Fréderique Boeykens <frederique.boeykens@ugent.be>
+
+Description: The R-package variantscanR enables the filtering of variant call format (VCF file) files for the presence of known disease-causing variants. 
+    In addition to the main variant-filtering function, the package allows for the estimation of genetic diversity using both single and multisample VCF files. 
+    User-defined, file-specific options are available for the quality control of certain parameters using online database screening. 
+    Finally, next to the filtering of known disease-causing variants, an additional step is optional to gather the remaining variants located within the genes of interest. 
+    The R package is not species-specific.
+    
+License: GPL-3
+
+URL: https://github.com/FrederiqueBoeykens/variantscanR``
+
+Encoding: UTF-8
+
+LazyData: True
+
+LazyDataCompression: bzip2
+
+RoxygenNote: 7.1.2
+
+Imports: 
+    vcfR,
+    dplyr,
+    stats,
+    rebus,
+    stringr,
+    Biostrings,
+    ggplot2,
+    ggrepel,
+    R3port,
+    svMisc
+    
+Suggests: 
+    rmarkdown,
+    knitr,
+    BSgenome,
+    BSgenome.Cfamiliaris.UCSC.canFam3,
+    tibble
+    
+VignetteBuilder: knitr
+
+Depends: 
+    R (>= 2.10)
 
 # Introduction
 
@@ -22,7 +75,7 @@ optional to gather the remaining variants located within the genes of interest.
 
 VariantscanR is an R package, designed for the use as a clinical tool for variant filtering of known
 disease-causing variants in domestic animals. The package focuses on cats and dogs but can be used for
-other animals if the required data and information for this animal is present. 
+other animals if the required data and information for this animal is available. 
 
 This vignette is divided into four parts:
 
@@ -47,8 +100,8 @@ a yellow, female Labrador retriever.
 
 
 # Preprocessing
-For the filtering of variants, the pipeline needs a least 3 different input file. The first one being the
-file containing the variants of interest. Secondly, the VCF file to which the variants of interest are filtered against and thirdly, a BED file for the annotation of variants is needed throughout the worflow. These 3 files require a certain format, which is explained in the following sections.
+For the filtering of variants, the pipeline needs a least 3 different input files. The first one being the
+file containing the variants of interest (VOI file). Secondly, the VCF file to which the variants of interest are filtered against and thirdly, a BED file for the annotation of variants is needed throughout the worflow. These 3 files require a certain format, which is explained in the following sections.
 
 ## Input files
 ### (1) VCF file
@@ -60,7 +113,7 @@ VCF stands for 'Variant Call Format' and is a standardized text file format used
 
 The first 9 columns of the header line and the variant call record line give information on the variants found.
 
-The VCF file already has a certain fixed format and doesn't need adjusting. In fact, please **never edit** a VCF in a word processor by hand, because it **will** screw up the format! 
+The VCF file already has a certain fixed format and doesn't need adjusting. In fact, please **never edit** a VCF in a word processor by hand, because it **will** disrupt the formatting! 
 
 ### (2) Variants Of Interest file (VOI file)
 The VOI file contains the known disease-causing variants you are interested in. This file does need a certain format so it can be used in downstream analysis. 
@@ -76,11 +129,17 @@ Following columns need to be specified:
 * Variant Phenotype
 * Breed
 
-The columns in __bold__ are mandatory, the other ones are optional. The optional columns need to be included in the file, but don't need values, so _NA_ values are allowed. 
+The columns in __bold__ are mandatory, the other ones are optional. The optional columns **need** to be included in the file, but don't need values, so _NA_ values are allowed. 
 
 However, the function also allows another 'specific' format that can be downloaded straight from the internet, to make it a little more user-friendly. 
 The file can be downloaded from [here](https://www.omia.org/home/). For example, if you want to download the known-disease causing variants of the dog, a CSV document can be obtained from [here](https://www.omia.org/results/?gb_species_id=9615&search_type=advanced&result_type=variant) at the bottom __'Download table as CSV'__.
-When the CSV file is converted into an Excel table, you will notice that the _Start_, _End_ and _Reference sequence_ columns are replaced by a _'g. or m.'_ column. The package allows this format. However, in the _pRocess_ function (explained below), the OMIA parameter has to be set to TRUE (default = FALSE). 
+You will notice that the _Start_, _End_ and _Reference sequence_ columns are replaced by a _'g. or m.'_ column. The package allows this format. However, make sure adjust the OMIA parameter in the _pRocess_ function (explained below) to TRUE (default = FALSE). 
+
+You can upload the omia.csv file into the R environment using: file <- read.csv("file_name.csv").
+Make sure that the file is located within your working directory, otherwise you can use: 
+file_path <- "path/to/your/file.csv"
+data <- read.csv(file_path)
+the _pRocess_ function is able to handle the .csv file.
 
 ### (3) Annotation file
 A BED (Browser Extensible Data) file is needed for annotation along the way. A BED file had a fixed format, including 3 required fields:
@@ -130,15 +189,15 @@ respectively. This notation needs to be changed to the ‘chrN’ notation, with
 chromosome. This is done using the _chromosomerenamR_ function.
 
 For this conversion a file a needed providing both names. For the dog, such a file is available in the package [Data folder](https://github.com/FrederiqueBoeykens/variantscanR/tree/main/data). 
-The original names are stored in the first column and the 'chrN' names are placed in the second column.
+The original names are stored in the **first** column and the 'chrN' names are placed in the **second** column.
 
 ## _VCFscanneR_
 Because the VCF file format is not one of the standard formats that can be uploaded in the R environment, the vcfscannR function was created.
 This function uploads a multisample sample VCF file into the R environment and turns it into a single
 sample VCF, ready for downstream analysis. 
 The function has 2 parameters. The first parameter is the name of the VCF file that needs to be uploaded
-OR contains the path to the file. The second parameter is the name of the sample of interest. The sample
-name has to match with that of the VCF file. In our example, the name is _sample_9_. 
+OR contains the path to the file. Both .vcf and .vcf.gz formats are accepted. 
+The second parameter is the name of the sample of interest. **The sample name has to match with that of the VCF file**. In our example, the name is _sample_9_. 
 
 The example VCF file (_SNPs.recode.subset.rename.vcf.gz_) has 31 rows and 10 columns and contains variants found within chromosome 5. 
 
@@ -172,7 +231,7 @@ head(vcf)
 ```
 
 
-As you can see, the chromosomes do not have the required 'chrN' notation, for this the _chromosomenameR_ function needs to be carried out.
+As you can see, the chromosomes do not have the required 'chrN' notation, for this the _chromosomenameR_ function needs to be used.
 
 ## _chromosomenameR_
 
@@ -243,7 +302,7 @@ Now that all the input files have been amended for downstream analysis. A final 
 
 The _pRocess_ function has several parameters of which a couple are optional.
 Because files that are manually made or adjusted are prone to human errors, quality control might be useful. The _pRocess_ function includes some optional quality control filters. 
-For example, the genomic locations provided for each variants are screened for errors by comparison with a reference genome. If a mismatch is encountered, the user will get notified if this error and will be asked to check this information for this variant.
+For example, the genomic locations provided for each variants are screened for errors by comparison with a reference genome. If a mismatch is encountered, the user will get notified of this error and will be asked to check this information for this variant.
 Next to this, an assembly version check can be performed by providing the "refseq" parameter with this information. If a variant does not belong to the right verion, that variant is removed from the VCF file. This is _"CanFam3.1"_ in our example. 
 If the _variants file_ is downloaded from the OMIA website (as explained above in the Input files section), it is possible to provide the function with this information by setting the _OMIA paramater_ to TRUE (this is FALSE by default). 
 
