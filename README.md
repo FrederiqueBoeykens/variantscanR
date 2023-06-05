@@ -23,7 +23,7 @@ purposes.
 
 <img src="https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Figure1.png" alt="Workflow" width="400">
 
-## Installation
+
 
 You can install the released version of variantscanR from
 [CRAN](https://CRAN.R-project.org) with:
@@ -851,3 +851,5 @@ function collects all other variants present in the genes that contain
 the variants of interest as this might be valuable input in these cases.
 A dataframe is rendered in the R environment. This dataframe can be
 searched by the user to identify potentially interesting variants.
+
+
