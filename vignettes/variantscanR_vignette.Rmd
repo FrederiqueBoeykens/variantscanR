@@ -87,7 +87,6 @@ This vignette is divided into four parts:
 A visual representation of the workflow is given below.
 To explain the workflow of this package, an example will be used and elaborated in this vignette.
 Disclaimer: Not the entire VCF dataset is used for as this is a very large file.
-
 ![variantscanR workflow](https://raw.githubusercontent.com/FrederiqueBoeykens/images/main/Figure1.png)
 
 
@@ -494,8 +493,8 @@ library(tibble)
 
 #### Test 1 pRocess parameters: Quality control: yes, OMIA = TRUE and QC = TRUE
 ```{r}
-data("omia_VOI", package = "variantscanR")
-variants_file <- omia_VOI
+data("final_omia_dataset", package = "variantscanR")
+variants_file <- final_omia_dataset
 BED_file <- BED_file_fully_annotated
 refseq <- "CanFam3.1"
 organism <- BSgenome.Cfamiliaris.UCSC.canFam3
@@ -509,8 +508,8 @@ For the 5th variant, no reference was given and therefore, that row needs revisi
 
 #### test 2 pRocess paramaters: Quality control: No, OMIA = TRUE and QC = FALSE
 ```{r}
-data("omia_VOI", package = "variantscanR")
-variants_file <- omia_VOI
+data("final_omia_dataset", package = "variantscanR")
+variants_file <- final_omia_dataset
 BED_file <- BED_file_fully_annotated
 refseq <- "CanFam3.1"
 organism <- BSgenome.Cfamiliaris.UCSC.canFam3

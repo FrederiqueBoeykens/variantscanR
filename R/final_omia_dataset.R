@@ -7,7 +7,7 @@
 #'
 #' @docType data
 #'
-#' @usage data(omia_raw)
+#' @usage data(final_omia_dataset)
 #'
 #' @format An object of class \code{"data.frame"}
 #' \describe{
@@ -37,6 +37,6 @@
 #' @keywords datasets
 #' @examples
 #'
-#' data(omia_raw)
-#' head(omia_raw)
-"omia_raw"
+#' data(final_omia_dataset)
+#' head(final_omia_dataset)
+"final_omia_dataset"
