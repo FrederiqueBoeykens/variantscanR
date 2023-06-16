@@ -19,7 +19,7 @@
 #' \dontrun{}
 
 
-variantfiltR <- function(VCF, variants_file, BED_file_annot, breed){
+variantfiltR <- function(vcf, variants_file, BED_file_annot, breed){
   cicip <- colnames(variants_file)[5]
   if (cicip == "Check"){
     variants_file <- variants_file[,-c(5:6)]
